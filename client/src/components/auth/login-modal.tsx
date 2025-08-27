@@ -72,7 +72,11 @@ export default function LoginModal({
         description: `Welcome to For Your Mind ${config.title}`,
       });
       onClose();
-      setLocation(config.redirect);
+      setTimeout(() => {
+        setLocation(config.redirect);
+        // Force a page reload to ensure fresh auth state
+        window.location.reload();
+      }, 100);
     } catch (error) {
       toast({
         title: "Login failed",

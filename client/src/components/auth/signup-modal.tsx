@@ -99,8 +99,14 @@ export default function SignupModal({
         title: "Account created successfully",
         description: `Welcome to For Your Mind, ${displayName}!`,
       });
+      
+      // Close modal first, then redirect after a small delay to ensure state updates
       onClose();
-      setLocation(config.redirect);
+      setTimeout(() => {
+        setLocation(config.redirect);
+        // Force a page reload to ensure fresh auth state
+        window.location.reload();
+      }, 100);
     } catch (error) {
       toast({
         title: "Registration failed",

@@ -3,8 +3,8 @@ import { User, AuthResponse } from "../types";
 const API_BASE = "/api";
 
 class AuthService {
-  private token: string | null = null;
-  private user: User | null = null;
+  public token: string | null = null;
+  public user: User | null = null;
 
   constructor() {
     this.token = localStorage.getItem("auth_token");
@@ -99,5 +99,12 @@ export const useAuth = () => {
     login: authService.login.bind(authService),
     register: authService.register.bind(authService),
     logout: authService.logout.bind(authService),
+    refreshAuth: () => {
+      // Force a re-read of auth data from localStorage
+      const token = localStorage.getItem("auth_token");
+      const userData = localStorage.getItem("auth_user");
+      authService.token = token;
+      authService.user = userData ? JSON.parse(userData) : null;
+    }
   };
 };
