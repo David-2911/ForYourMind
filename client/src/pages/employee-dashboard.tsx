@@ -55,7 +55,7 @@ export default function EmployeeDashboard() {
   };
 
   // Calculate wellness streak (simplified)
-  const wellnessStreak = moodEntries.length > 0 ? 7 : 0;
+  const wellnessStreak = (moodEntries as any[]).length > 0 ? 7 : 0;
   const todaySessions = 3;
   const wellnessScore = 8.2;
 

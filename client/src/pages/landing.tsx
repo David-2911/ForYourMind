@@ -6,10 +6,12 @@ import BreathingCircle from "@/components/common/breathing-circle";
 import GlassmorphicCard from "@/components/common/glassmorphic-card";
 import RoleSelectionModal from "@/components/auth/role-selection-modal";
 import LoginModal from "@/components/auth/login-modal";
+import SignupModal from "@/components/auth/signup-modal";
 
 export default function LandingPage() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"individual" | "manager" | "admin" | null>(null);
 
   const handleRoleSelect = (role: "individual" | "manager" | "admin") => {
@@ -200,15 +202,27 @@ export default function LandingPage() {
       />
 
       {selectedRole && (
-        <LoginModal
-          isOpen={showLoginModal}
-          onClose={() => setShowLoginModal(false)}
-          role={selectedRole}
-          onSwitchToSignup={() => {
-            // TODO: Implement signup modal
-            console.log("Switch to signup");
-          }}
-        />
+        <>
+          <LoginModal
+            isOpen={showLoginModal}
+            onClose={() => setShowLoginModal(false)}
+            role={selectedRole}
+            onSwitchToSignup={() => {
+              setShowLoginModal(false);
+              setShowSignupModal(true);
+            }}
+          />
+          
+          <SignupModal
+            isOpen={showSignupModal}
+            onClose={() => setShowSignupModal(false)}
+            role={selectedRole}
+            onSwitchToLogin={() => {
+              setShowSignupModal(false);
+              setShowLoginModal(true);
+            }}
+          />
+        </>
       )}
     </div>
   );

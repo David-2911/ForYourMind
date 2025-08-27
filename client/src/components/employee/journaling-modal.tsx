@@ -130,7 +130,7 @@ export default function JournalingModal({ isOpen, onClose }: JournalingModalProp
             <GlassmorphicCard>
               <h4 className="font-semibold mb-2">Recent Entries</h4>
               <div className="space-y-2">
-                {journals.slice(0, 3).map((journal: any) => (
+                {(journals as any[]).slice(0, 3).map((journal: any) => (
                   <div key={journal.id} className="text-sm border-l-2 border-secondary pl-2">
                     <div className="font-medium">
                       {new Date(journal.createdAt).toLocaleDateString()}

@@ -119,7 +119,7 @@ export default function AnonymousRantsModal({ isOpen, onClose }: AnonymousRantsM
           {isLoading ? (
             <div className="text-center py-8">Loading posts...</div>
           ) : (
-            rants.map((rant: AnonymousRant) => (
+            (rants as AnonymousRant[]).map((rant: AnonymousRant) => (
               <GlassmorphicCard
                 key={rant.id}
                 className={`border-l-4 ${getSentimentColor(rant.sentimentScore)}`}

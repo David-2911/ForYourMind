@@ -5,21 +5,31 @@ import { insertUserSchema, insertJournalSchema, insertAnonymousRantSchema, inser
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 
-const JWT_SECRET = process.env.JWT_SECRET || "for-your-mind-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "for-your-mind-secret-key-2024";
 
-// JWT middleware
+// JWT middleware with enhanced error handling
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  
-  if (!token) {
-    return res.status(401).json({ message: "Access token required" });
-  }
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    
+    if (!token) {
+      return res.status(401).json({ message: "Access token required" });
+    }
 
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
-    (req as any).user = user;
-    next();
-  });
+    jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ message: "Token expired" });
+        }
+        return res.status(403).json({ message: "Invalid token" });
+      }
+      (req as any).user = user;
+      next();
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Authentication error" });
+  }
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -57,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, organizationCode } = req.body;
       
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password required" });
@@ -66,6 +76,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.verifyPassword(email, password);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Additional validation for manager/admin roles
+      if (user.role === "manager" && !organizationCode) {
+        return res.status(400).json({ message: "Organization code required for managers" });
+      }
+      
+      if (user.role === "admin") {
+        // For demo purposes, accept any code for admin
+        // In production, this would validate against a secure 2FA system
+        if (!organizationCode) {
+          return res.status(400).json({ message: "Admin access code required" });
+        }
       }
 
       const token = jwt.sign(
@@ -301,6 +324,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(metrics);
     } catch (error) {
       res.status(500).json({ message: "Failed to get wellness metrics", error });
+    }
+  });
+
+  // Organization management routes
+  app.post("/api/organizations", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { role, userId } = (req as any).user;
+      const { name } = req.body;
+
+      if (role !== "admin") {
+        return res.status(403).json({ message: "Only admins can create organizations" });
+      }
+
+      const organization = await storage.createOrganization(name, userId);
+      res.status(201).json(organization);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create organization", error });
+    }
+  });
+
+  app.post("/api/organizations/:orgId/employees", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { role } = (req as any).user;
+      const { orgId } = req.params;
+      const { userId, jobTitle, department } = req.body;
+
+      if (role !== "manager" && role !== "admin") {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const employee = await storage.addEmployeeToOrg(userId, orgId, jobTitle, department);
+      res.status(201).json(employee);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add employee", error });
+    }
+  });
+
+  app.get("/api/organizations/:orgId/employees", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { role } = (req as any).user;
+      const { orgId } = req.params;
+
+      if (role !== "manager" && role !== "admin") {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const employees = await storage.getEmployeesByOrg(orgId);
+      res.json(employees);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get employees", error });
+    }
+  });
+
+  // Wellness survey routes
+  app.post("/api/surveys", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { role } = (req as any).user;
+      if (role !== "manager" && role !== "admin") {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      
+      // Survey creation logic would go here
+      res.status(201).json({ message: "Survey created successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create survey", error });
+    }
+  });
+
+  // Learning courses progress
+  app.post("/api/courses/:id/progress", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const { id } = req.params;
+      const { progress } = req.body;
+      
+      // Course progress tracking logic would go here
+      res.json({ message: "Progress updated", courseId: id, progress });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update progress", error });
+    }
+  });
+
+  // Notification preferences
+  app.get("/api/notifications/preferences", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      // Return user notification preferences
+      res.json({
+        dailyReminders: true,
+        weeklyReports: true,
+        therapistUpdates: true,
+        communityMessages: false
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get preferences", error });
+    }
+  });
+
+  app.put("/api/notifications/preferences", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const preferences = req.body;
+      // Update user notification preferences
+      res.json({ message: "Preferences updated", preferences });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update preferences", error });
     }
   });
 

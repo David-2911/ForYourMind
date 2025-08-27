@@ -106,7 +106,105 @@ export class MemStorage implements IStorage {
       createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
     };
 
+    const rant2: AnonymousRant = {
+      id: randomUUID(),
+      anonymousToken: randomUUID(),
+      content: "The breathing exercises have really helped me during stressful meetings. Grateful for this platform!",
+      sentimentScore: 0.6,
+      supportCount: 8,
+      createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000) // 4 hours ago
+    };
+
     this.anonymousRants.set(rant1.id, rant1);
+    this.anonymousRants.set(rant2.id, rant2);
+
+    // Seed organization and employees
+    const org1: Organization = {
+      id: "org-123",
+      name: "TechCorp Inc.",
+      adminUserId: null,
+      settings: { allowAnonymousRants: true, requireMoodCheckins: false },
+      wellnessScore: 8.2,
+      createdAt: new Date()
+    };
+    
+    this.organizations.set(org1.id, org1);
+
+    // Create demo users for testing all roles
+    const demoAdmin: User = {
+      id: "admin-demo",
+      email: "admin@foryourmind.com",
+      displayName: "Admin User",
+      role: "admin",
+      password: await bcrypt.hash("admin123", 10),
+      avatarUrl: null,
+      timezone: "UTC",
+      preferences: null,
+      createdAt: new Date()
+    };
+    
+    const demoManager: User = {
+      id: "manager-demo",
+      email: "manager@techcorp.com",
+      displayName: "Sarah Johnson",
+      role: "manager",
+      password: await bcrypt.hash("manager123", 10),
+      avatarUrl: null,
+      timezone: "UTC",
+      preferences: null,
+      createdAt: new Date()
+    };
+    
+    const demoEmployee: User = {
+      id: "employee-demo",
+      email: "john@techcorp.com",
+      displayName: "John Smith",
+      role: "individual",
+      password: await bcrypt.hash("employee123", 10),
+      avatarUrl: null,
+      timezone: "UTC",
+      preferences: null,
+      createdAt: new Date()
+    };
+    
+    this.users.set(demoAdmin.id, demoAdmin);
+    this.users.set(demoManager.id, demoManager);
+    this.users.set(demoEmployee.id, demoEmployee);
+    
+    // Add employee to organization
+    const employee1: Employee = {
+      id: randomUUID(),
+      userId: demoEmployee.id,
+      orgId: org1.id,
+      jobTitle: "Software Engineer",
+      department: "Engineering",
+      anonymizedId: randomUUID(),
+      wellnessStreak: 7
+    };
+    
+    this.employees.set(employee1.id, employee1);
+    
+    // Add some sample mood entries and journals for the demo employee
+    const moodEntry1: MoodEntry = {
+      id: randomUUID(),
+      userId: demoEmployee.id,
+      moodScore: 4,
+      notes: "Feeling good after morning meditation",
+      createdAt: new Date()
+    };
+    
+    const journal1: Journal = {
+      id: randomUUID(),
+      userId: demoEmployee.id,
+      moodScore: 4,
+      content: "Today was a productive day. I managed to complete my tasks and even had time for a walk during lunch. Grateful for the support from my team.",
+      tags: ["gratitude", "productivity", "team"],
+      isPrivate: true,
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
+    };
+    
+    this.moodEntries.set(moodEntry1.id, moodEntry1);
+    this.journals.set(journal1.id, journal1);
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -120,12 +218,20 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    
+    // Create proper user object matching schema
     const user: User = {
-      ...insertUser,
       id,
+      email: insertUser.email,
+      displayName: insertUser.displayName,
+      role: insertUser.role as "individual" | "manager" | "admin",
       password: hashedPassword,
+      avatarUrl: insertUser.avatarUrl || null,
+      timezone: insertUser.timezone || "UTC",
+      preferences: insertUser.preferences || {},
       createdAt: new Date()
     };
+    
     this.users.set(id, user);
     return user;
   }
@@ -141,8 +247,12 @@ export class MemStorage implements IStorage {
   async createJournal(insertJournal: InsertJournal): Promise<Journal> {
     const id = randomUUID();
     const journal: Journal = {
-      ...insertJournal,
       id,
+      userId: insertJournal.userId || null,
+      moodScore: insertJournal.moodScore || null,
+      content: insertJournal.content || null,
+      tags: Array.isArray(insertJournal.tags) ? insertJournal.tags as string[] : null,
+      isPrivate: insertJournal.isPrivate !== undefined ? insertJournal.isPrivate : true,
       createdAt: new Date()
     };
     this.journals.set(id, journal);
@@ -175,8 +285,10 @@ export class MemStorage implements IStorage {
   async createAnonymousRant(insertRant: InsertAnonymousRant): Promise<AnonymousRant> {
     const id = randomUUID();
     const rant: AnonymousRant = {
-      ...insertRant,
       id,
+      anonymousToken: insertRant.anonymousToken,
+      content: insertRant.content,
+      sentimentScore: insertRant.sentimentScore || null,
       supportCount: 0,
       createdAt: new Date()
     };
@@ -201,8 +313,10 @@ export class MemStorage implements IStorage {
   async createMoodEntry(insertEntry: InsertMoodEntry): Promise<MoodEntry> {
     const id = randomUUID();
     const entry: MoodEntry = {
-      ...insertEntry,
       id,
+      userId: insertEntry.userId || null,
+      moodScore: insertEntry.moodScore,
+      notes: insertEntry.notes || null,
       createdAt: new Date()
     };
     this.moodEntries.set(id, entry);
@@ -227,8 +341,12 @@ export class MemStorage implements IStorage {
   async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
     const id = randomUUID();
     const appointment: Appointment = {
-      ...insertAppointment,
       id,
+      therapistId: insertAppointment.therapistId || null,
+      userId: insertAppointment.userId || null,
+      startTime: insertAppointment.startTime || null,
+      endTime: insertAppointment.endTime || null,
+      notes: insertAppointment.notes || null,
       status: "pending"
     };
     this.appointments.set(id, appointment);
@@ -272,6 +390,35 @@ export class MemStorage implements IStorage {
         { name: "Support", average: 6.3, status: "needs-attention" }
       ]
     };
+  }
+
+  async createOrganization(name: string, adminUserId: string): Promise<Organization> {
+    const id = randomUUID();
+    const organization: Organization = {
+      id,
+      name,
+      adminUserId,
+      settings: { allowAnonymousRants: true, requireMoodCheckins: false },
+      wellnessScore: 0,
+      createdAt: new Date()
+    };
+    this.organizations.set(id, organization);
+    return organization;
+  }
+
+  async addEmployeeToOrg(userId: string, orgId: string, jobTitle?: string, department?: string): Promise<Employee> {
+    const id = randomUUID();
+    const employee: Employee = {
+      id,
+      userId,
+      orgId,
+      jobTitle: jobTitle || null,
+      department: department || null,
+      anonymizedId: randomUUID(),
+      wellnessStreak: 0
+    };
+    this.employees.set(id, employee);
+    return employee;
   }
 }
 

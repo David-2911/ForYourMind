@@ -62,7 +62,7 @@ export default function TherapistsModal({ isOpen, onClose }: TherapistsModalProp
         ) : (
           <>
             <div className="grid md:grid-cols-4 gap-6 mb-6">
-              {therapists.map((therapist: Therapist) => {
+              {(therapists as Therapist[]).map((therapist: Therapist) => {
                 const availability = getAvailabilityStatus(therapist.availability);
                 
                 return (
