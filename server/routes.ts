@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET || "for-your-mind-secret-key-2024";
+const ACCESS_TOKEN_TTL = process.env.ACCESS_TOKEN_TTL || '15m';
 
 // JWT middleware with enhanced error handling
 const authenticateToken = (req: Request, res: Response, next: any) => {
@@ -36,29 +37,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+  const userData = insertUserSchema.parse(req.body as any) as any;
       
-      // Check if user exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+  // Check if user exists
+  const existingUser = await storage.getUserByEmail(userData.email as string);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      const user = await storage.createUser(userData);
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+  const user = await storage.createUser(userData as any);
+  const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
+      // create refresh token and set as httpOnly cookie
+      const refreshToken = await storage.createRefreshToken(user.id);
+      res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: app.get('env') !== 'development', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-      res.json({ 
-        user: { 
-          id: user.id, 
-          email: user.email, 
-          displayName: user.displayName,
-          role: user.role 
-        }, 
-        token 
+      res.json({
+        user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role },
+        token
       });
     } catch (error) {
       res.status(400).json({ message: "Invalid user data", error });
@@ -67,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
-      const { email, password, organizationCode } = req.body;
+  const { email, password, organizationCode } = req.body as any;
       
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password required" });
@@ -91,23 +86,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+  const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
+  const refreshToken = await storage.createRefreshToken(user.id);
+      res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: app.get('env') !== 'development', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-      res.json({ 
-        user: { 
-          id: user.id, 
-          email: user.email, 
-          displayName: user.displayName,
-          role: user.role 
-        }, 
-        token 
-      });
+      res.json({ user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role }, token });
     } catch (error) {
       res.status(500).json({ message: "Login failed", error });
+    }
+  });
+
+  // Refresh token endpoint
+  app.post('/api/auth/refresh', async (req: Request, res: Response) => {
+    try {
+  const refreshToken = req.cookies?.refresh_token || (req.body as any)?.refresh_token;
+      if (!refreshToken) return res.status(401).json({ message: 'Refresh token required' });
+
+  const userId = await storage.verifyRefreshToken(refreshToken as string);
+      if (!userId) return res.status(403).json({ message: 'Invalid or expired refresh token' });
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      // Rotate refresh token
+      await storage.deleteRefreshToken(refreshToken);
+      const newRefreshToken = await storage.createRefreshToken(userId);
+      res.cookie('refresh_token', newRefreshToken, { httpOnly: true, secure: app.get('env') !== 'development', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+  const accessToken = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
+      res.json({ token: accessToken, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to refresh token', error });
+    }
+  });
+
+  // Logout - revoke refresh token and clear cookie
+  app.post('/api/auth/logout', async (req: Request, res: Response) => {
+    try {
+      const refreshToken = req.cookies?.refresh_token || req.body?.refresh_token;
+      if (refreshToken) {
+        await storage.deleteRefreshToken(refreshToken);
+      }
+      res.clearCookie('refresh_token');
+      res.json({ message: 'Logged out' });
+    } catch (error) {
+      res.status(500).json({ message: 'Logout failed', error });
     }
   });
 
@@ -131,6 +154,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to get profile", error });
+    }
+  });
+
+  // Update user profile
+  app.put("/api/user/profile", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const { displayName, email } = req.body;
+
+      const updatedUser = await storage.updateUser(userId, {
+        displayName: displayName || undefined,
+        email: email || undefined,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        displayName: updatedUser.displayName,
+        role: updatedUser.role,
+        avatarUrl: updatedUser.avatarUrl,
+        preferences: updatedUser.preferences
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update profile", error });
     }
   });
 
@@ -337,7 +388,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only admins can create organizations" });
       }
 
-      const organization = await storage.createOrganization(name, userId);
+  if (!storage.createOrganization) return res.status(500).json({ message: 'Storage backend does not support organization creation' });
+  const organization = await storage.createOrganization(name, userId);
       res.status(201).json(organization);
     } catch (error) {
       res.status(500).json({ message: "Failed to create organization", error });
@@ -354,7 +406,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
-      const employee = await storage.addEmployeeToOrg(userId, orgId, jobTitle, department);
+  if (!storage.addEmployeeToOrg) return res.status(500).json({ message: 'Storage backend does not support adding employees to orgs' });
+  const employee = await storage.addEmployeeToOrg(userId, orgId, jobTitle, department);
       res.status(201).json(employee);
     } catch (error) {
       res.status(500).json({ message: "Failed to add employee", error });
@@ -430,6 +483,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Preferences updated", preferences });
     } catch (error) {
       res.status(500).json({ message: "Failed to update preferences", error });
+    }
+  });
+
+  // Buddy matching
+  app.get('/api/buddies/suggestions', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const suggestions = await storage.suggestBuddies(userId, 10);
+      res.json(suggestions);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get buddy suggestions', error });
+    }
+  });
+
+  app.post('/api/buddies/match', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const { otherUserId } = req.body;
+      if (!otherUserId) return res.status(400).json({ message: 'otherUserId required' });
+      const match = await storage.createBuddyMatch(userId, otherUserId, Math.random());
+      res.status(201).json(match);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to create buddy match', error });
+    }
+  });
+
+  app.put('/api/buddies/:id/status', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      if (!['pending','accepted','declined'].includes(status)) return res.status(400).json({ message: 'Invalid status' });
+      const success = await storage.updateBuddyMatchStatus(id, status);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to update match status', error });
+    }
+  });
+
+  app.get('/api/buddies/matches', authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const matches = await storage.getBuddyMatches(userId);
+      res.json(matches);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get matches', error });
     }
   });
 

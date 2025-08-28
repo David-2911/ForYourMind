@@ -1,0 +1,37 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+DATABASE_URL not set — skipping Neon initialization
+11:59:26 AM [express] serving on port 5000
+SyntaxError: Unexpected token e in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:169:10)
+    at parse (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:86:15)
+    at /home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:203:9)
+    at invokeCallback (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:238:16)
+    at done (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:517:28)
+    at endReadableNT (node:internal/streams/readable:1400:12)
+11:59:59 AM [express] POST /api/auth/refresh 401 in 11ms :: {"message":"Refresh token required"}
+11:59:59 AM [express] POST /api/auth/logout 200 in 4ms :: {"message":"Logged out"}
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+12:00:45 PM [express] GET /api/mood 403 in 7ms :: {"message":"Invalid token"}
+12:00:45 PM [express] GET /api/journals 403 in 5ms :: {"message":"Invalid token"}
+12:00:55 PM [express] POST /api/auth/login 200 in 111ms :: {"user":{"id":"employee-demo","email":"joh…
+12:01:05 PM [express] GET /api/rants 200 in 3ms :: [{"id":"856af9a3-af48-4c2c-907a-a85fa31ea50e","ano…
+12:01:12 PM [express] GET /api/therapists 403 in 3ms :: {"message":"Invalid token"}
+12:01:15 PM [express] GET /api/journals 403 in 5ms :: {"message":"Invalid token"}
+12:01:30 PM [express] POST /api/auth/logout 200 in 2ms :: {"message":"Logged out"}
+12:02:05 PM [express] POST /api/auth/login 401 in 5ms :: {"message":"Invalid credentials"}
+12:02:08 PM [express] POST /api/auth/login 401 in 14ms :: {"message":"Invalid credentials"}
+12:02:13 PM [express] POST /api/auth/login 401 in 5ms :: {"message":"Invalid credentials"}
+12:02:26 PM [express] POST /api/auth/login 401 in 4ms :: {"message":"Invalid credentials"}
+12:02:36 PM [express] POST /api/auth/login 401 in 5ms :: {"message":"Invalid credentials"}
+12:03:13 PM [express] GET /api/user/profile 200 in 6ms :: {"id":"employee-demo","email":"john@techcor…
+12:03:13 PM [express] POST /api/auth/refresh 200 in 11ms :: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp…
+12:03:13 PM [express] POST /api/auth/logout 200 in 2ms :: {"message":"Logged out"}

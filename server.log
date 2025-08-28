@@ -1,0 +1,55 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+USE_SQLITE detected — skipping Neon initialization
+11:50:35 AM [express] serving on port 5000
+SyntaxError: Unexpected token e in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:169:10)
+    at parse (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:86:15)
+    at /home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:203:9)
+    at invokeCallback (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:238:16)
+    at done (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:517:28)
+    at endReadableNT (node:internal/streams/readable:1400:12)
+11:50:56 AM [express] POST /api/auth/refresh 401 in 3ms :: {"message":"Refresh token required"}
+11:50:56 AM [express] POST /api/auth/logout 200 in 7ms :: {"message":"Logged out"}
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+SyntaxError: Unexpected token e in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:169:10)
+    at parse (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:86:15)
+    at /home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:203:9)
+    at invokeCallback (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:238:16)
+    at done (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:517:28)
+    at endReadableNT (node:internal/streams/readable:1400:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+SyntaxError: Unexpected token e in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:169:10)
+    at parse (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:86:15)
+    at /home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:203:9)
+    at invokeCallback (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:238:16)
+    at done (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:517:28)
+    at endReadableNT (node:internal/streams/readable:1400:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+11:53:28 AM [express] POST /api/auth/refresh 401 in 6ms :: {"message":"Refresh token required"}
+11:53:28 AM [express] POST /api/auth/logout 200 in 6ms :: {"message":"Logged out"}
+11:54:07 AM [express] POST /api/auth/login 401 in 7ms :: {"message":"Invalid credentials"}
+11:54:08 AM [express] POST /api/auth/refresh 401 in 5ms :: {"message":"Refresh token required"}
+11:54:08 AM [express] POST /api/auth/logout 200 in 1ms :: {"message":"Logged out"}
+11:57:05 AM [express] POST /api/auth/login 200 in 288ms :: {"user":{"id":"24e5558f-a636-4e3f-8e7d-64d…
+11:57:07 AM [express] GET /api/mood 304 in 6ms :: []
+11:57:07 AM [express] GET /api/journals 304 in 3ms :: []
+11:57:09 AM [express] GET /api/user/profile 200 in 5ms :: {"id":"24e5558f-a636-4e3f-8e7d-64ddc48281dc…

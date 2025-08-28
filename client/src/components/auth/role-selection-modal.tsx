@@ -46,46 +46,49 @@ export default function RoleSelectionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphic max-w-2xl animate-slide-up border-none">
+      <DialogContent className="glassmorphic max-w-2xl animate-slide-up border-none bg-card/95 backdrop-blur-xl">
         <DialogHeader className="text-center mb-8">
-          <DialogTitle className="text-3xl font-bold mb-4">
+          <DialogTitle className="text-3xl font-bold mb-4 text-foreground">
             Choose Your Role
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-base font-medium text-muted-foreground">
             Select how you'll be using For Your Mind
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {roles.map((role) => (
-            <Button
-              key={role.key}
-              data-testid={`role-button-${role.key}`}
-              variant="ghost"
-              className="h-auto p-0"
-              onClick={() => onRoleSelect(role.key)}
-            >
-              <GlassmorphicCard className="text-center card-hover w-full group">
-                <div className={`w-16 h-16 ${role.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
-                  <role.icon className="text-2xl text-foreground" />
-                </div>
-                <h4 className="font-semibold mb-2">{role.title}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {role.description}
-                </p>
-              </GlassmorphicCard>
-            </Button>
+          {roles.map((role, index) => (
+            <div key={role.key} className="animate-fade-in-up" style={{ animationDelay: `${0.1 + index * 0.1}s` }}>
+              <Button
+                data-testid={`role-button-${role.key}`}
+                variant="ghost"
+                className="h-auto p-0 w-full"
+                onClick={() => onRoleSelect(role.key)}
+              >
+                <GlassmorphicCard className="text-center card-hover w-full group hover:scale-105 transition-all duration-300">
+                  <div className={`w-16 h-16 ${role.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 animate-pulse-gentle`}>
+                    <role.icon className="text-2xl text-white" />
+                  </div>
+                  <h4 className="font-semibold text-foreground mb-2">{role.title}</h4>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {role.description}
+                  </p>
+                </GlassmorphicCard>
+              </Button>
+            </div>
           ))}
         </div>
 
-        <Button
-          data-testid="button-cancel-role"
-          onClick={onClose}
-          variant="outline"
-          className="mt-8 w-full"
-        >
-          Cancel
-        </Button>
+        <div className="animate-fade-in-up mt-8" style={{ animationDelay: '0.5s' }}>
+          <Button
+            data-testid="button-cancel-role"
+            onClick={onClose}
+            variant="outline"
+            className="w-full font-semibold hover:bg-muted/50 transition-all duration-300"
+          >
+            Cancel
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

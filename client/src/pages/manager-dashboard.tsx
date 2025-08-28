@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Brain } from "lucide-react";
 import GlassmorphicCard from "@/components/common/glassmorphic-card";
 import { useAuth } from "@/lib/auth";
+import ProfileModal from "@/components/common/profile-modal";
 import { useQuery } from "@tanstack/react-query";
 import { WellnessMetrics } from "@/types";
 
 export default function ManagerDashboard() {
   const { user, logout } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
 
   // Fetch wellness metrics for organization
   const { data: metrics } = useQuery<WellnessMetrics>({
@@ -25,26 +28,31 @@ export default function ManagerDashboard() {
       <meta name="description" content="Team wellness insights and management dashboard for monitoring employee wellbeing metrics and creating action plans." />
 
       {/* Navigation */}
-      <nav className="bg-card border-b border-border p-4">
+      <nav className="bg-card border-b border-border p-3 md:p-4 sticky top-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-              <Brain className="text-accent-foreground" />
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center bg-white/5 animate-pulse-gentle">
+              <Brain className="text-foreground w-4 h-4 md:w-5 md:h-5" />
             </div>
-            <h1 className="text-xl font-bold">For Your Mind</h1>
-            <Badge className="bg-accent text-accent-foreground">Manager</Badge>
+            <h1 className="text-lg md:text-xl font-bold text-foreground hidden sm:block">For Your Mind</h1>
+            <Badge className="bg-accent text-accent-foreground text-xs">Manager</Badge>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">TechCorp Inc.</span>
-            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-              <span className="text-sm font-semibold">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <span className="text-xs md:text-sm text-muted-foreground hidden md:block">TechCorp Inc.</span>
+            <button
+              data-testid="button-profile"
+              onClick={() => setShowProfile(true)}
+              className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform cursor-pointer"
+              title="Profile Settings"
+            >
+              <span className="text-xs md:text-sm font-semibold text-white">
                 {user?.displayName?.charAt(0) || "M"}
               </span>
-            </div>
+            </button>
             <button
               data-testid="button-logout"
               onClick={logout}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-xs md:text-sm text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/50 transition-all duration-300"
             >
               Logout
             </button>
@@ -52,62 +60,65 @@ export default function ManagerDashboard() {
         </div>
       </nav>
 
+      <ProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
+
       {/* Manager Content */}
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 md:p-6">
         {/* Manager Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Team Wellness Dashboard</h2>
-          <p className="text-muted-foreground">Monitor and support your team's wellbeing</p>
+        <div className="mb-6 md:mb-8 animate-fade-in-up">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Team Wellness Dashboard</h2>
+          <p className="text-muted-foreground text-sm md:text-base">Monitor and support your team's wellbeing</p>
         </div>
 
         {/* Metrics Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <GlassmorphicCard className="text-center">
-            <div className="text-3xl font-bold text-ring mb-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <div className="text-2xl md:text-3xl font-bold text-ring mb-2">
               {metrics?.teamWellness?.toFixed(1) || "7.8"}
             </div>
-            <h4 className="font-semibold mb-1">Team Wellness</h4>
-            <p className="text-sm text-muted-foreground">↗ +0.5 this month</p>
+            <h4 className="font-semibold mb-1 text-sm md:text-base">Team Wellness</h4>
+            <p className="text-xs md:text-sm text-muted-foreground">↗ +0.5 this month</p>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-3xl font-bold text-secondary mb-2">
+          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <div className="text-2xl md:text-3xl font-bold text-secondary mb-2">
               {metrics ? `${Math.round(metrics.engagement * 100)}%` : "89%"}
             </div>
-            <h4 className="font-semibold mb-1">Engagement</h4>
-            <p className="text-sm text-muted-foreground">24/27 active users</p>
+            <h4 className="font-semibold mb-1 text-sm md:text-base">Engagement</h4>
+            <p className="text-xs md:text-sm text-muted-foreground">24/27 active users</p>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-3xl font-bold text-accent mb-2">
+          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <div className="text-2xl md:text-3xl font-bold text-accent mb-2">
               {metrics?.sessionsThisWeek || "156"}
             </div>
-            <h4 className="font-semibold mb-1">Sessions</h4>
-            <p className="text-sm text-muted-foreground">This week</p>
+            <h4 className="font-semibold mb-1 text-sm md:text-base">Sessions</h4>
+            <p className="text-xs md:text-sm text-muted-foreground">This week</p>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">
+          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <div className="text-2xl md:text-3xl font-bold text-primary mb-2">
               {metrics?.atRiskCount || "3"}
             </div>
-            <h4 className="font-semibold mb-1">At Risk</h4>
-            <p className="text-sm text-muted-foreground">Need attention</p>
+            <h4 className="font-semibold mb-1 text-sm md:text-base">At Risk</h4>
+            <p className="text-xs md:text-sm text-muted-foreground">Need attention</p>
           </GlassmorphicCard>
         </div>
 
         {/* Team Wellness Heatmap */}
-        <GlassmorphicCard className="mb-8">
-          <h3 className="text-xl font-semibold mb-4">Department Wellness Overview</h3>
+        <GlassmorphicCard className="mb-6 md:mb-8 animate-fade-in-up">
+          <h3 className="text-lg md:text-xl font-semibold mb-4 text-foreground">Department Wellness Overview</h3>
           <img
             src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300"
             alt="Collaborative team wellness meeting in bright modern office"
-            className="rounded-xl mb-4 w-full h-48 object-cover"
+            className="rounded-xl mb-4 w-full h-32 md:h-48 object-cover animate-float-gentle"
           />
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {metrics?.departments?.map((dept, index) => (
               <div
                 key={index}
-                className={`text-center p-4 rounded-xl ${departmentColors[dept.status as keyof typeof departmentColors] || 'bg-gray-100'}`}
+                className={`text-center p-3 md:p-4 rounded-xl animate-fade-in-up hover:scale-105 transition-all duration-300 ${departmentColors[dept.status as keyof typeof departmentColors] || 'bg-gray-100'}`}
+                style={{ animationDelay: `${0.6 + index * 0.1}s` }}
               >
                 <div className="font-semibold">{dept.name}</div>
                 <div className="text-sm text-muted-foreground">

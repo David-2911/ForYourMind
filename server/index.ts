@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./database";
@@ -6,6 +8,10 @@ import { initializeDatabase } from "./database";
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+// Enable CORS with credentials so the client can use httpOnly refresh cookie
+const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 
 app.use((req, res, next) => {
   const start = Date.now();

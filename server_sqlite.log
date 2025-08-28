@@ -1,0 +1,20 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+USE_SQLITE detected — skipping Neon initialization
+12:06:59 PM [express] serving on port 5000
+SyntaxError: Unexpected token e in JSON at position 0
+    at JSON.parse (<anonymous>)
+    at createStrictSyntaxError (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:169:10)
+    at parse (/home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/types/json.js:86:15)
+    at /home/dave/Downloads/MindfulMe/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:203:9)
+    at invokeCallback (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:238:16)
+    at done (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/dave/Downloads/MindfulMe/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:517:28)
+    at endReadableNT (node:internal/streams/readable:1400:12)
+12:07:24 PM [express] GET /api/user/profile 403 in 5ms :: {"message":"Invalid token"}
+12:07:24 PM [express] POST /api/auth/refresh 401 in 3ms :: {"message":"Refresh token required"}
+12:07:24 PM [express] POST /api/auth/logout 200 in 3ms :: {"message":"Logged out"}

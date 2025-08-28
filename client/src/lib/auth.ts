@@ -31,6 +31,7 @@ class AuthService {
   async login(email: string, password: string, organizationCode?: string): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, organizationCode }),
     });
@@ -45,6 +46,23 @@ class AuthService {
     return data;
   }
 
+  async refresh(): Promise<AuthResponse | null> {
+    try {
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) return null;
+      const data: AuthResponse = await response.json();
+      this.setAuthData(data);
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async register(userData: {
     email: string;
     password: string;
@@ -53,6 +71,7 @@ class AuthService {
   }): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
+      credentials: 'include',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
@@ -68,10 +87,16 @@ class AuthService {
   }
 
   logout(): void {
-    this.token = null;
-    this.user = null;
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
+    // inform server to clear refresh cookie, then clear local state and navigate home
+    fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' })
+      .catch(() => {})
+      .finally(() => {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        try { window.location.href = '/'; } catch (e) { /* ignore in non-browser env */ }
+      });
   }
 
   private setAuthData(data: AuthResponse): void {

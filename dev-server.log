@@ -1,0 +1,34 @@
+nohup: ignoring input
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+USE_SQLITE detected — skipping Neon initialization
+11:03:29 AM [express] serving on port 5000
+11:03:48 AM [express] GET /api/rants 200 in 24ms :: [{"id":"73b34a7e-ac71-4037-9dbc-25da77e2634e","an…
+11:03:48 AM [express] POST /api/auth/login 401 in 6ms :: {"message":"Invalid credentials"}
+11:03:48 AM [express] GET /api/therapists 403 in 9ms :: {"message":"Invalid token"}
+11:03:48 AM [express] GET /api/journals 401 in 1ms :: {"message":"Access token required"}
+11:03:48 AM [express] POST /api/auth/refresh 401 in 4ms :: {"message":"Refresh token required"}
+11:03:48 AM [express] POST /api/auth/logout 200 in 3ms :: {"message":"Logged out"}
+11:03:48 AM [express] GET /api/rants 200 in 4ms :: [{"id":"73b34a7e-ac71-4037-9dbc-25da77e2634e","ano…
+11:07:26 AM [express] GET /api/rants 200 in 8ms :: [{"id":"73b34a7e-ac71-4037-9dbc-25da77e2634e","ano…
+11:07:26 AM [express] POST /api/auth/login 401 in 4ms :: {"message":"Invalid credentials"}
+11:07:26 AM [express] GET /api/journals 401 in 3ms :: {"message":"Access token required"}
+11:07:26 AM [express] POST /api/auth/refresh 401 in 4ms :: {"message":"Refresh token required"}
+11:07:26 AM [express] POST /api/auth/logout 200 in 4ms :: {"message":"Logged out"}
+11:08:00 AM [express] GET /api/rants 200 in 1ms :: [{"id":"73b34a7e-ac71-4037-9dbc-25da77e2634e","ano…
+11:08:00 AM [express] POST /api/auth/login 401 in 2ms :: {"message":"Invalid credentials"}
+11:08:00 AM [express] GET /api/journals 401 in 2ms :: {"message":"Access token required"}
+11:08:00 AM [express] POST /api/auth/refresh 401 in 6ms :: {"message":"Refresh token required"}
+11:08:00 AM [express] POST /api/auth/logout 200 in 9ms :: {"message":"Logged out"}
+11:09:02 AM [express] GET /api/rants 200 in 4ms :: [{"id":"73b34a7e-ac71-4037-9dbc-25da77e2634e","ano…
+11:09:02 AM [express] POST /api/auth/login 401 in 2ms :: {"message":"Invalid credentials"}
+11:09:02 AM [express] GET /api/journals 401 in 1ms :: {"message":"Access token required"}
+11:09:02 AM [express] POST /api/auth/refresh 401 in 1ms :: {"message":"Refresh token required"}
+11:09:02 AM [express] POST /api/auth/logout 200 in 2ms :: {"message":"Logged out"}
+11:09:20 AM [express] GET /api/rants 200 in 1ms :: [{"id":"73b34a7e-ac71-4037-9dbc-25da77e2634e","ano…
+11:09:20 AM [express] POST /api/auth/login 401 in 1ms :: {"message":"Invalid credentials"}
+11:09:20 AM [express] GET /api/journals 401 in 1ms :: {"message":"Access token required"}
+11:09:20 AM [express] POST /api/auth/refresh 401 in 1ms :: {"message":"Refresh token required"}
+11:09:20 AM [express] POST /api/auth/logout 200 in 4ms :: {"message":"Logged out"}

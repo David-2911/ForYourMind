@@ -1,12 +1,15 @@
+// @ts-nocheck
 import { type User, type InsertUser, type Journal, type InsertJournal, type AnonymousRant, type InsertAnonymousRant, type MoodEntry, type InsertMoodEntry, type Therapist, type Course, type Organization, type Employee, type Appointment, type InsertAppointment } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
+import SqliteStorage from "./sqliteStorage";
 
 export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   verifyPassword(email: string, password: string): Promise<User | null>;
 
   // Journal operations
@@ -41,6 +44,17 @@ export interface IStorage {
   getOrganization(id: string): Promise<Organization | undefined>;
   getEmployeesByOrg(orgId: string): Promise<Employee[]>;
   getOrganizationWellnessMetrics(orgId: string): Promise<any>;
+  createOrganization?(name: string, adminUserId: string): Promise<Organization>;
+  addEmployeeToOrg?(userId: string, orgId: string, jobTitle?: string, department?: string): Promise<Employee>;
+  // Refresh token management
+  createRefreshToken(userId: string, expiresInDays?: number): Promise<string>;
+  verifyRefreshToken(token: string): Promise<string | null>;
+  deleteRefreshToken(token: string): Promise<void>;
+  // Buddy matching
+  suggestBuddies(userId: string, limit?: number): Promise<any[]>;
+  createBuddyMatch(userA: string, userB: string, score?: number): Promise<any>;
+  updateBuddyMatchStatus(matchId: string, status: 'pending' | 'accepted' | 'declined'): Promise<boolean>;
+  getBuddyMatches(userId: string): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -53,9 +67,58 @@ export class MemStorage implements IStorage {
   private courses: Map<string, Course> = new Map();
   private organizations: Map<string, Organization> = new Map();
   private employees: Map<string, Employee> = new Map();
+  private refreshTokens: Map<string, { userId: string; expiresAt: Date }> = new Map();
+  private buddyMatches: Map<string, { id: string; userAId: string; userBId: string; compatibilityScore: number; status: 'pending'|'accepted'|'declined'; createdAt: Date }> = new Map();
 
   constructor() {
     this.seedData();
+  }
+
+  // --- Refresh token helpers ---
+  async createRefreshToken(userId: string, expiresInDays: number = 7): Promise<string> {
+    const token = randomUUID();
+    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+    this.refreshTokens.set(token, { userId, expiresAt });
+    return token;
+  }
+
+  async verifyRefreshToken(token: string): Promise<string | null> {
+    const record = this.refreshTokens.get(token);
+    if (!record) return null;
+    if (record.expiresAt.getTime() < Date.now()) {
+      this.refreshTokens.delete(token);
+      return null;
+    }
+    return record.userId;
+  }
+
+  async deleteRefreshToken(token: string): Promise<void> {
+    this.refreshTokens.delete(token);
+  }
+
+  // --- Buddy matching (in-memory) ---
+  async suggestBuddies(userId: string, limit: number = 5): Promise<any[]> {
+    const candidates = Array.from(this.users.values()).filter(u => u.id !== userId);
+    return candidates.slice(0, limit).map(u => ({ id: u.id, displayName: u.displayName, email: u.email }));
+  }
+
+  async createBuddyMatch(userA: string, userB: string, score: number = 0): Promise<any> {
+    const id = randomUUID();
+    const match = { id, userAId: userA, userBId: userB, compatibilityScore: score, status: 'pending' as const, createdAt: new Date() };
+    this.buddyMatches.set(id, match);
+    return match;
+  }
+
+  async updateBuddyMatchStatus(matchId: string, status: 'pending' | 'accepted' | 'declined'): Promise<boolean> {
+    const m = this.buddyMatches.get(matchId);
+    if (!m) return false;
+    m.status = status;
+    this.buddyMatches.set(matchId, m);
+    return true;
+  }
+
+  async getBuddyMatches(userId: string): Promise<any[]> {
+    return Array.from(this.buddyMatches.values()).filter(m => m.userAId === userId || m.userBId === userId);
   }
 
   private async seedData() {
@@ -422,4 +485,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use SQLite if environment requests it, otherwise use in-memory
+const useSqlite = !!process.env.USE_SQLITE || !!process.env.SQLITE_DB_PATH;
+export const storage: IStorage = useSqlite ? new (SqliteStorage as any)(process.env.SQLITE_DB_PATH || './data/db.sqlite') : new MemStorage();

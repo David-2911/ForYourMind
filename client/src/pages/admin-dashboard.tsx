@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Brain } from "lucide-react";
 import GlassmorphicCard from "@/components/common/glassmorphic-card";
 import { useAuth } from "@/lib/auth";
+import ProfileModal from "@/components/common/profile-modal";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("organizations");
+  const [showProfile, setShowProfile] = useState(false);
 
   // Mock data for admin dashboard - in real implementation this would come from API
   const systemMetrics = {
@@ -74,27 +76,35 @@ export default function AdminDashboard() {
       <meta name="description" content="Platform administration dashboard for managing organizations, users, and system health across the For Your Mind wellness platform." />
 
       {/* Navigation */}
-      <nav className="bg-card border-b border-border p-4">
+      <nav className="bg-card border-b border-border p-3 md:p-4 sticky top-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Brain className="text-primary-foreground" />
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center bg-white/5 animate-pulse-gentle">
+              <Brain className="text-foreground w-4 h-4 md:w-5 md:h-5" />
             </div>
-            <h1 className="text-xl font-bold">For Your Mind</h1>
-            <Badge className="bg-primary text-primary-foreground">Admin</Badge>
+            <h1 className="text-lg md:text-xl font-bold text-foreground hidden sm:block">For Your Mind</h1>
+            <Badge className="bg-accent text-accent-foreground text-xs">Admin</Badge>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">System Administrator</span>
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-sm font-semibold">
-                {user?.displayName?.charAt(0) || "SA"}
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <span className="text-xs md:text-sm text-muted-foreground hidden md:block">System Administrator</span>
+            <Button
+              data-testid="button-profile"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowProfile(true)}
+              className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform cursor-pointer p-0"
+              title="Profile Settings"
+            >
+              <span className="text-xs md:text-sm font-semibold text-white">
+                {user?.displayName?.charAt(0) || "A"}
               </span>
-            </div>
+            </Button>
             <Button
               data-testid="button-logout"
               variant="ghost"
               size="sm"
               onClick={logout}
+              className="text-xs md:text-sm text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/50 transition-all duration-300"
             >
               Logout
             </Button>
@@ -102,18 +112,20 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
+      <ProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
+
       {/* Admin Content */}
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 md:p-6">
         {/* Admin Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Platform Administration</h2>
-          <p className="text-muted-foreground">Manage organizations, users, and system health</p>
+        <div className="mb-6 md:mb-8 animate-fade-in-up">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Platform Administration</h2>
+          <p className="text-muted-foreground text-sm md:text-base">Manage organizations, users, and system health</p>
         </div>
 
         {/* System Overview */}
-        <div className="grid md:grid-cols-5 gap-6 mb-8">
-          <GlassmorphicCard className="text-center">
-            <div className="text-2xl font-bold text-ring mb-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-6 md:mb-8">
+          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <div className="text-xl md:text-2xl font-bold text-ring mb-2">
               {systemMetrics.totalUsers.toLocaleString()}
             </div>
             <h4 className="font-semibold text-sm">Total Users</h4>

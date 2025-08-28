@@ -120,20 +120,22 @@ export default function SignupModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphic max-w-md animate-slide-up border-none">
-        <DialogHeader className="text-center mb-8">
-          <div className={`w-16 h-16 ${config.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
-            <config.icon className="text-2xl text-foreground" />
+      <DialogContent className="glassmorphic max-w-md animate-slide-up border-none bg-card/95 backdrop-blur-xl shadow-2xl">
+        <DialogHeader className="text-center mb-6 md:mb-8">
+          <div className={`w-16 h-16 md:w-20 md:h-20 ${config.color} rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 animate-pulse-gentle shadow-lg`}>
+            <config.icon className="text-2xl md:text-3xl text-white" />
           </div>
-          <DialogTitle className="text-2xl font-bold mb-2">
+          <DialogTitle className="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-foreground leading-tight">
             {config.title}
           </DialogTitle>
-          <DialogDescription>{config.description}</DialogDescription>
+          <DialogDescription className="text-base md:text-lg font-medium text-muted-foreground leading-relaxed px-2">
+            {config.description}
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="displayName">Full Name</Label>
+        <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
+          <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.1s' }}>
+            <Label htmlFor="displayName" className="text-foreground font-semibold text-sm md:text-base mb-2 block">Full Name</Label>
             <Input
               id="displayName"
               data-testid="input-display-name"
@@ -141,12 +143,13 @@ export default function SignupModal({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
-              className="mt-2"
+              className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
+              placeholder="Enter your full name"
             />
           </div>
 
-          <div>
-            <Label htmlFor="email">Email</Label>
+          <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.2s' }}>
+            <Label htmlFor="email" className="text-foreground font-semibold text-sm md:text-base mb-2 block">Email Address</Label>
             <Input
               id="email"
               data-testid="input-email"
@@ -154,12 +157,13 @@ export default function SignupModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-2"
+              className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
+              placeholder="Enter your email"
             />
           </div>
 
-          <div>
-            <Label htmlFor="password">Password</Label>
+          <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.3s' }}>
+            <Label htmlFor="password" className="text-foreground font-semibold text-sm md:text-base mb-2 block">Password</Label>
             <Input
               id="password"
               data-testid="input-password"
@@ -167,12 +171,13 @@ export default function SignupModal({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-2"
+              className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
+              placeholder="Create a password (min 6 characters)"
             />
           </div>
 
-          <div>
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.4s' }}>
+            <Label htmlFor="confirmPassword" className="text-foreground font-semibold text-sm md:text-base mb-2 block">Confirm Password</Label>
             <Input
               id="confirmPassword"
               data-testid="input-confirm-password"
@@ -180,13 +185,14 @@ export default function SignupModal({
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="mt-2"
+              className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
+              placeholder="Confirm your password"
             />
           </div>
 
           {(role === "manager" || role === "admin") && (
-            <div>
-              <Label htmlFor="orgCode">
+            <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.5s' }}>
+              <Label htmlFor="orgCode" className="text-foreground font-semibold text-sm md:text-base mb-2 block">
                 {role === "admin" ? "Admin Access Code" : "Organization Code"}
               </Label>
               <Input
@@ -196,40 +202,44 @@ export default function SignupModal({
                 value={organizationCode}
                 onChange={(e) => setOrganizationCode(e.target.value)}
                 placeholder={role === "admin" ? "Contact support for code" : "Provided by your organization"}
-                className="mt-2"
+                className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
               />
             </div>
           )}
 
-          <Button
-            data-testid="button-create-account"
-            type="submit"
-            className="btn-primary w-full text-white"
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating Account..." : "Create Account"}
-          </Button>
+          <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.6s' }}>
+            <Button
+              data-testid="button-create-account"
+              type="submit"
+              className="btn-primary w-full text-white font-semibold hover:scale-105 transition-all duration-300 text-sm md:text-base py-3 md:py-4 rounded-lg shadow-lg"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Account..." : "Create Account"}
+            </Button>
+          </div>
         </form>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-6 md:mt-8 animate-fade-in-up px-2" style={{ animationDelay: '0.7s' }}>
           <Button
             data-testid="link-login"
             variant="link"
             onClick={onSwitchToLogin}
-            className="text-ring hover:underline"
+            className="text-ring hover:text-primary font-semibold hover:underline transition-colors duration-300 text-sm md:text-base"
           >
-            Already have an account? Sign in
+            Already have an account? <span className="font-bold">Sign in</span>
           </Button>
         </div>
 
-        <Button
-          data-testid="button-back-role"
-          variant="ghost"
-          onClick={onClose}
-          className="mt-4 w-full text-muted-foreground hover:text-foreground"
-        >
-          ← Back to role selection
-        </Button>
+        <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.8s' }}>
+          <Button
+            data-testid="button-back-role"
+            variant="ghost"
+            onClick={onClose}
+            className="mt-4 w-full text-muted-foreground hover:text-foreground font-medium hover:bg-muted/50 transition-all duration-300 text-sm md:text-base py-2 md:py-3 rounded-lg"
+          >
+            ← Back to role selection
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
