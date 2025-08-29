@@ -146,16 +146,16 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
     if (breathingType === 'box') {
       return (
         <>
-          <p className="mb-2">Box breathing is a powerful stress-relieving technique used by Navy SEALs, athletes, and mindfulness practitioners.</p>
-          <h4 className="font-semibold mt-4 mb-2">Benefits:</h4>
-          <ul className="list-disc ml-5 space-y-1">
+          <p className="mb-2 text-sm md:text-base">Box breathing is a powerful stress-relieving technique used by Navy SEALs, athletes, and mindfulness practitioners.</p>
+          <h4 className="font-semibold mt-3 md:mt-4 mb-1 md:mb-2 text-sm md:text-base">Benefits:</h4>
+          <ul className="list-disc ml-4 md:ml-5 space-y-1 text-sm md:text-base">
             <li>Reduces stress and anxiety</li>
             <li>Improves concentration</li>
             <li>Helps regulate emotions</li>
             <li>Can lower blood pressure</li>
           </ul>
-          <h4 className="font-semibold mt-4 mb-2">Instructions:</h4>
-          <ol className="list-decimal ml-5 space-y-1">
+          <h4 className="font-semibold mt-3 md:mt-4 mb-1 md:mb-2 text-sm md:text-base">Instructions:</h4>
+          <ol className="list-decimal ml-4 md:ml-5 space-y-1 text-sm md:text-base">
             <li>Inhale through your nose for 4 seconds</li>
             <li>Hold your breath for 4 seconds</li>
             <li>Exhale completely through your mouth for 4 seconds</li>
@@ -167,16 +167,16 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
     } else {
       return (
         <>
-          <p className="mb-2">The 4-7-8 breathing technique was developed by Dr. Andrew Weil as a natural tranquilizer for the nervous system.</p>
-          <h4 className="font-semibold mt-4 mb-2">Benefits:</h4>
-          <ul className="list-disc ml-5 space-y-1">
+          <p className="mb-2 text-sm md:text-base">The 4-7-8 breathing technique was developed by Dr. Andrew Weil as a natural tranquilizer for the nervous system.</p>
+          <h4 className="font-semibold mt-3 md:mt-4 mb-1 md:mb-2 text-sm md:text-base">Benefits:</h4>
+          <ul className="list-disc ml-4 md:ml-5 space-y-1 text-sm md:text-base">
             <li>Helps fall asleep faster</li>
             <li>Reduces anxiety</li>
             <li>Manages cravings</li>
             <li>Controls emotional responses</li>
           </ul>
-          <h4 className="font-semibold mt-4 mb-2">Instructions:</h4>
-          <ol className="list-decimal ml-5 space-y-1">
+          <h4 className="font-semibold mt-3 md:mt-4 mb-1 md:mb-2 text-sm md:text-base">Instructions:</h4>
+          <ol className="list-decimal ml-4 md:ml-5 space-y-1 text-sm md:text-base">
             <li>Inhale quietly through your nose for 4 seconds</li>
             <li>Hold your breath for 7 seconds</li>
             <li>Exhale completely through your mouth for 8 seconds</li>
@@ -197,9 +197,9 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphic max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row justify-between items-center mb-6">
-          <DialogTitle className="text-2xl font-bold">{getTitle()}</DialogTitle>
+      <DialogContent className="glassmorphic max-w-[95%] sm:max-w-md md:max-w-xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
+        <DialogHeader className="flex flex-row justify-between items-center mb-4 md:mb-6">
+          <DialogTitle className="text-xl md:text-2xl font-bold">{getTitle()}</DialogTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -212,13 +212,13 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
           </Button>
         </DialogHeader>
 
-        <DialogDescription className="text-center mb-6">
+        <DialogDescription className="text-center text-sm md:text-base mb-4 md:mb-6">
           {getDescription()}
         </DialogDescription>
 
-        <div className="flex flex-col items-center justify-center py-8">
+        <div className="flex flex-col items-center justify-center py-4 md:py-8">
           <div 
-            className="breathing-circle-exercise relative w-64 h-64 rounded-full flex items-center justify-center shadow-2xl mb-8"
+            className="breathing-circle-exercise relative w-48 h-48 md:w-64 md:h-64 rounded-full flex items-center justify-center shadow-2xl mb-6 md:mb-8"
             style={{ 
               transform: `scale(${getCircleScale()})`,
               transition: 'transform 0.3s ease-out',
@@ -227,13 +227,13 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
                 rgba(135, 206, 235, ${phase === 'idle' ? '0.6' : '0.7'}) 100%)`
             }}
           >
-            <div className="text-center space-y-4">
-              <Leaf className="w-12 h-12 mx-auto text-primary-foreground opacity-80" />
-              <p className="text-primary-foreground font-semibold text-xl">
+            <div className="text-center space-y-2 md:space-y-4">
+              <Leaf className="w-8 h-8 md:w-12 md:h-12 mx-auto text-primary-foreground opacity-80" />
+              <p className="text-primary-foreground font-semibold text-lg md:text-xl">
                 {getInstructionText()}
               </p>
               {phase !== 'idle' && (
-                <p className="text-primary-foreground font-medium">
+                <p className="text-primary-foreground font-medium text-sm md:text-base">
                   {Math.floor(timer)}/{durations[phase]}s
                 </p>
               )}
@@ -275,19 +275,20 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
             )}
           </div>
 
-          <div className="flex flex-col items-center space-y-4">
-            <div className="text-center mb-2">
-              <span className="text-sm text-muted-foreground">
+          <div className="flex flex-col items-center space-y-3 md:space-y-4">
+            <div className="text-center mb-1 md:mb-2">
+              <span className="text-xs md:text-sm text-muted-foreground">
                 Cycle {cycleCount} of {totalCycles}
               </span>
             </div>
             
-            <div className="space-x-4">
+            <div className="flex flex-row space-x-2 md:space-x-4">
               <Button
                 variant="default"
                 onClick={() => setIsActive(!isActive)}
                 disabled={cycleCount >= totalCycles}
-                className="px-8"
+                className="px-4 md:px-8 text-sm md:text-base"
+                size="sm"
               >
                 {isActive ? "Pause" : phase === 'idle' ? "Start" : "Resume"}
               </Button>
@@ -295,7 +296,8 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
               <Button 
                 variant="outline" 
                 onClick={resetExercise}
-                className="px-8"
+                className="px-4 md:px-8 text-sm md:text-base"
+                size="sm"
               >
                 Reset
               </Button>
@@ -306,15 +308,15 @@ export default function BreathingExerciseModal({ breathingType = 'box', isOpen, 
 
       {/* Info Dialog */}
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
-        <DialogContent className="glassmorphic max-w-md">
-          <DialogHeader>
-            <DialogTitle>About {getTitle()}</DialogTitle>
+        <DialogContent className="glassmorphic max-w-[95%] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-lg md:text-xl font-semibold">About {getTitle()}</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-2 md:py-4 text-sm md:text-base">
             {getInfoContent()}
           </div>
           <DialogClose asChild>
-            <Button className="w-full">Close</Button>
+            <Button className="w-full text-sm md:text-base mt-2">Close</Button>
           </DialogClose>
         </DialogContent>
       </Dialog>

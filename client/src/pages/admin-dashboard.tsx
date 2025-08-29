@@ -117,58 +117,59 @@ export default function AdminDashboard() {
       {/* Admin Content */}
       <div className="container mx-auto p-4 md:p-6">
         {/* Admin Header */}
-        <div className="mb-6 md:mb-8 animate-fade-in-up">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Platform Administration</h2>
-          <p className="text-muted-foreground text-sm md:text-base">Manage organizations, users, and system health</p>
+        <div className="mb-4 md:mb-6 lg:mb-8 animate-fade-in-up">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 md:mb-2 text-foreground">Platform Administration</h2>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">Manage organizations, users, and system health</p>
         </div>
 
         {/* System Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-6 md:mb-8">
-          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
-            <div className="text-xl md:text-2xl font-bold text-ring mb-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-4 lg:gap-6 mb-4 md:mb-6 lg:mb-8">
+          <GlassmorphicCard className="p-2 sm:p-3 md:p-4 text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-ring mb-1 md:mb-2">
               {systemMetrics.totalUsers.toLocaleString()}
             </div>
-            <h4 className="font-semibold text-sm">Total Users</h4>
+            <h4 className="font-semibold text-xs sm:text-sm">Total Users</h4>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-2xl font-bold text-secondary mb-2">
+          <GlassmorphicCard className="p-2 sm:p-3 md:p-4 text-center">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-secondary mb-1 md:mb-2">
               {systemMetrics.organizations}
             </div>
-            <h4 className="font-semibold text-sm">Organizations</h4>
+            <h4 className="font-semibold text-xs sm:text-sm">Organizations</h4>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-2xl font-bold text-accent mb-2">
+          <GlassmorphicCard className="p-2 sm:p-3 md:p-4 text-center">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-accent mb-1 md:mb-2">
               {systemMetrics.uptime}%
             </div>
-            <h4 className="font-semibold text-sm">Uptime</h4>
+            <h4 className="font-semibold text-xs sm:text-sm">Uptime</h4>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-2xl font-bold text-primary mb-2">
+          <GlassmorphicCard className="p-2 sm:p-3 md:p-4 text-center">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-1 md:mb-2">
               {systemMetrics.therapists}
             </div>
-            <h4 className="font-semibold text-sm">Therapists</h4>
+            <h4 className="font-semibold text-xs sm:text-sm">Therapists</h4>
           </GlassmorphicCard>
 
-          <GlassmorphicCard className="text-center">
-            <div className="text-2xl font-bold text-green-600 mb-2">
+          <GlassmorphicCard className="p-2 sm:p-3 md:p-4 text-center">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 mb-1 md:mb-2">
               ${(systemMetrics.monthlyRevenue / 1000).toFixed(0)}k
             </div>
-            <h4 className="font-semibold text-sm">Monthly Revenue</h4>
+            <h4 className="font-semibold text-xs sm:text-sm">Monthly Revenue</h4>
           </GlassmorphicCard>
         </div>
 
         {/* Admin Tabs */}
-        <div className="mb-6">
-          <div className="flex space-x-4 border-b border-border">
+        <div className="mb-4 md:mb-6 overflow-x-auto">
+          <div className="flex space-x-2 md:space-x-4 border-b border-border min-w-max">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
                 data-testid={`tab-${tab.id}`}
                 variant="ghost"
-                className={`nav-tab px-4 py-2 font-medium ${
+                size="sm"
+                className={`nav-tab px-2 md:px-4 py-1 md:py-2 text-xs md:text-sm font-medium ${
                   activeTab === tab.id ? "active" : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab(tab.id)}
@@ -181,13 +182,14 @@ export default function AdminDashboard() {
 
         {/* Tab Content */}
         {activeTab === "organizations" && (
-          <div className="grid md:grid-cols-2 gap-6">
-            <GlassmorphicCard>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Recent Organizations</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <GlassmorphicCard className="p-3 md:p-6">
+              <div className="flex justify-between items-center mb-3 md:mb-4">
+                <h3 className="text-lg md:text-xl font-semibold">Recent Organizations</h3>
                 <Button
                   data-testid="button-add-organization"
-                  className="btn-primary text-white text-sm"
+                  className="btn-primary text-white text-xs md:text-sm px-2 md:px-4 py-1 md:py-2"
+                  size="sm"
                 >
                   Add New
                 </Button>
@@ -195,21 +197,21 @@ export default function AdminDashboard() {
               <img
                 src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200"
                 alt="Successful corporate wellness program presentation in modern boardroom"
-                className="rounded-xl mb-4 w-full h-32 object-cover"
+                className="rounded-xl mb-3 md:mb-4 w-full h-24 md:h-32 object-cover"
               />
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 {recentOrganizations.map((org) => (
                   <div
                     key={org.id}
-                    className="flex justify-between items-center p-3 border border-border rounded-xl"
+                    className="flex justify-between items-center p-2 md:p-3 border border-border rounded-xl"
                   >
                     <div>
-                      <div className="font-medium">{org.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="font-medium text-xs md:text-sm">{org.name}</div>
+                      <div className="text-xs text-muted-foreground">
                         {org.employees} employees • {org.wellnessScore} wellness score
                       </div>
                     </div>
-                    <Badge className={getStatusColor(org.status)}>
+                    <Badge className={`${getStatusColor(org.status)} text-xs`}>
                       {org.status}
                     </Badge>
                   </div>
@@ -217,33 +219,33 @@ export default function AdminDashboard() {
               </div>
             </GlassmorphicCard>
 
-            <GlassmorphicCard>
-              <h3 className="text-xl font-semibold mb-4">Platform Statistics</h3>
+            <GlassmorphicCard className="p-3 md:p-6">
+              <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Platform Statistics</h3>
               <img
                 src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=200"
                 alt="Peaceful mindfulness session in serene natural environment"
-                className="rounded-xl mb-4 w-full h-32 object-cover"
+                className="rounded-xl mb-3 md:mb-4 w-full h-24 md:h-32 object-cover"
               />
-              <div className="space-y-4">
+              <div className="space-y-2 md:space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Daily Active Users</span>
-                  <span className="font-semibold">{platformStats.dailyActiveUsers}</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Daily Active Users</span>
+                  <span className="text-xs md:text-sm font-semibold">{platformStats.dailyActiveUsers}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sessions Today</span>
-                  <span className="font-semibold">{platformStats.sessionsToday.toLocaleString()}</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Sessions Today</span>
+                  <span className="text-xs md:text-sm font-semibold">{platformStats.sessionsToday.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Avg Session Duration</span>
-                  <span className="font-semibold">{platformStats.avgSessionDuration} min</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Avg Session Duration</span>
+                  <span className="text-xs md:text-sm font-semibold">{platformStats.avgSessionDuration} min</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Therapist Bookings</span>
-                  <span className="font-semibold">{platformStats.therapistBookings} today</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Therapist Bookings</span>
+                  <span className="text-xs md:text-sm font-semibold">{platformStats.therapistBookings} today</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Anonymous Rants</span>
-                  <span className="font-semibold">{platformStats.anonymousRants} pending</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">Anonymous Rants</span>
+                  <span className="text-xs md:text-sm font-semibold">{platformStats.anonymousRants} pending</span>
                 </div>
               </div>
             </GlassmorphicCard>
@@ -251,23 +253,23 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "users" && (
-          <GlassmorphicCard>
-            <h3 className="text-xl font-semibold mb-4">User Management</h3>
-            <p className="text-muted-foreground">User management interface would be implemented here.</p>
+          <GlassmorphicCard className="p-3 md:p-6">
+            <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">User Management</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">User management interface would be implemented here.</p>
           </GlassmorphicCard>
         )}
 
         {activeTab === "analytics" && (
-          <GlassmorphicCard>
-            <h3 className="text-xl font-semibold mb-4">Platform Analytics</h3>
-            <p className="text-muted-foreground">Advanced analytics dashboard would be implemented here.</p>
+          <GlassmorphicCard className="p-3 md:p-6">
+            <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Platform Analytics</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">Advanced analytics dashboard would be implemented here.</p>
           </GlassmorphicCard>
         )}
 
         {activeTab === "system" && (
-          <GlassmorphicCard>
-            <h3 className="text-xl font-semibold mb-4">System Health</h3>
-            <p className="text-muted-foreground">System health monitoring interface would be implemented here.</p>
+          <GlassmorphicCard className="p-3 md:p-6">
+            <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">System Health</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">System health monitoring interface would be implemented here.</p>
           </GlassmorphicCard>
         )}
       </div>
