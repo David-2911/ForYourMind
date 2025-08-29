@@ -12,12 +12,13 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
+  const API_BASE = "/api";
   const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
   const token = authService.getToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE}${url}`, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,

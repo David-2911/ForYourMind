@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertJournalSchema, insertAnonymousRantSchema, insertMoodEntrySchema, insertAppointmentSchema } from "@shared/schema";
+import { insertUserSchema, insertJournalSchema, insertAnonymousRantSchema, insertMoodEntrySchema, insertAppointmentSchema, insertWellnessAssessmentSchema, insertAssessmentResponseSchema } from "@shared/schema";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 
@@ -33,30 +33,95 @@ const authenticateToken = (req: Request, res: Response, next: any) => {
   }
 };
 
+// Assessment scoring function
+const calculateAssessmentScore = (questions: any[], responses: Record<string, any>) => {
+  let totalScore = 0;
+  const categoryScores: Record<string, number> = {};
+  const recommendations: string[] = [];
+
+  questions.forEach((question) => {
+    const response = responses[question.id];
+    if (response !== undefined) {
+      let score = 0;
+
+      if (question.type === 'scale') {
+        // Assuming scale is 1-5, convert to 0-4 for scoring
+        score = typeof response === 'number' ? response - 1 : 0;
+      } else if (question.type === 'multiple-choice') {
+        // Simple scoring based on option index
+        score = typeof response === 'number' ? response : 0;
+      }
+
+      totalScore += score;
+
+      // Track category scores
+      if (!categoryScores[question.category]) {
+        categoryScores[question.category] = 0;
+      }
+      categoryScores[question.category] += score;
+    }
+  });
+
+  // Generate recommendations based on scores
+  Object.entries(categoryScores).forEach(([category, score]) => {
+    const avgScore = score / questions.filter(q => q.category === category).length;
+
+    if (avgScore < 2) {
+      recommendations.push(`Consider focusing on ${category.toLowerCase()} with additional resources and support.`);
+    } else if (avgScore < 3) {
+      recommendations.push(`Your ${category.toLowerCase()} could benefit from some attention and self-care practices.`);
+    }
+  });
+
+  // Normalize total score to 0-10 scale
+  const maxPossibleScore = questions.length * 4; // Assuming max 4 points per question
+  const normalizedScore = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 10 : 0;
+
+  return {
+    totalScore: Math.round(normalizedScore * 10) / 10, // Round to 1 decimal
+    categoryScores,
+    recommendations
+  };
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-  const userData = insertUserSchema.parse(req.body as any) as any;
+      const userData = insertUserSchema.parse(req.body as any) as any;
       
-  // Check if user exists
-  const existingUser = await storage.getUserByEmail(userData.email as string);
+      // Validate password strength
+      if (userData.password && userData.password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long" });
+      }
+      
+      // Check if user exists
+      const existingUser = await storage.getUserByEmail(userData.email as string);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
-  const user = await storage.createUser(userData as any);
-  const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
+      const user = await storage.createUser(userData as any);
+      const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
       // create refresh token and set as httpOnly cookie
       const refreshToken = await storage.createRefreshToken(user.id);
-      res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: app.get('env') !== 'development', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie('refresh_token', refreshToken, { 
+        httpOnly: true, 
+        secure: app.get('env') !== 'development', 
+        sameSite: 'lax', 
+        maxAge: 7 * 24 * 60 * 60 * 1000 
+      });
 
       res.json({
         user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role },
         token
       });
     } catch (error) {
-      res.status(400).json({ message: "Invalid user data", error });
+      console.error("Registration error:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid user data", details: error.errors });
+      }
+      res.status(500).json({ message: "Registration failed", error: "An unexpected error occurred" });
     }
   });
 
@@ -528,6 +593,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(matches);
     } catch (error) {
       res.status(500).json({ message: 'Failed to get matches', error });
+    }
+  });
+
+  // Wellness Assessment routes
+  app.get("/api/wellness-assessments", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const assessments = await storage.getWellnessAssessments(userId);
+      res.json(assessments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get assessments", error });
+    }
+  });
+
+  app.get("/api/wellness-assessments/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const assessment = await storage.getWellnessAssessment(id);
+      
+      if (!assessment) {
+        return res.status(404).json({ message: "Assessment not found" });
+      }
+
+      res.json(assessment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get assessment", error });
+    }
+  });
+
+  app.post("/api/wellness-assessments/:id/submit", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const { id } = req.params;
+      const { responses } = req.body;
+
+      // Get the assessment to validate responses
+      const assessment = await storage.getWellnessAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ message: "Assessment not found" });
+      }
+
+      // Calculate scores and generate recommendations
+      const { totalScore, categoryScores, recommendations } = calculateAssessmentScore(assessment.questions, responses);
+
+      const responseData = {
+        assessmentId: id,
+        userId,
+        responses,
+        totalScore,
+        categoryScores,
+        recommendations,
+      };
+
+      const savedResponse = await storage.createAssessmentResponse(responseData);
+      res.status(201).json(savedResponse);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to submit assessment", error });
+    }
+  });
+
+  app.get("/api/wellness-assessments/responses", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const responses = await storage.getUserAssessmentResponses(userId);
+      res.json(responses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get responses", error });
+    }
+  });
+
+  app.get("/api/wellness-assessments/responses/latest", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const latestResponse = await storage.getLatestAssessmentResponse(userId);
+      res.json(latestResponse);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get latest response", error });
     }
   });
 

@@ -21,7 +21,19 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.token && !!this.user;
+    const hasToken = !!this.token;
+    const hasUser = !!this.user;
+    
+    // If we have inconsistent state, clear everything and return false
+    if (hasToken !== hasUser) {
+      this.token = null;
+      this.user = null;
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+      return false;
+    }
+    
+    return hasToken && hasUser;
   }
 
   hasRole(role: string): boolean {
@@ -29,36 +41,48 @@ class AuthService {
   }
 
   async login(email: string, password: string, organizationCode?: string): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      credentials: 'include',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, organizationCode }),
-    });
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, organizationCode }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Login failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+
+      const data: AuthResponse = await response.json();
+      this.setAuthData(data);
+      return data;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
-
-    const data: AuthResponse = await response.json();
-    this.setAuthData(data);
-    return data;
   }
 
   async refresh(): Promise<AuthResponse | null> {
     try {
+      console.log("Attempting token refresh");
       const response = await fetch(`${API_BASE}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) return null;
+      if (!response.ok) {
+        console.warn("Token refresh failed:", response.status);
+        return null;
+      }
+      
       const data: AuthResponse = await response.json();
       this.setAuthData(data);
+      console.log("Token refresh successful");
       return data;
     } catch (e) {
+      console.error("Token refresh error:", e);
       return null;
     }
   }
@@ -69,21 +93,26 @@ class AuthService {
     displayName: string;
     role: "individual" | "manager" | "admin";
   }): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE}/auth/register`, {
-      method: "POST",
-      credentials: 'include',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
+    try {
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Registration failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+
+      const data: AuthResponse = await response.json();
+      this.setAuthData(data);
+      return data;
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
     }
-
-    const data: AuthResponse = await response.json();
-    this.setAuthData(data);
-    return data;
   }
 
   logout(): void {
@@ -100,6 +129,11 @@ class AuthService {
   }
 
   private setAuthData(data: AuthResponse): void {
+    if (!data || !data.token || !data.user) {
+      console.error("Invalid auth data received:", data);
+      return;
+    }
+    
     this.token = data.token;
     this.user = data.user;
     localStorage.setItem("auth_token", data.token);

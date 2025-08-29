@@ -102,6 +102,35 @@ export const wellbeingSurveys = pgTable("wellbeing_surveys", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Individual wellness assessments
+export const wellnessAssessments = pgTable("wellness_assessments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  assessmentType: text("assessment_type").notNull(), // 'comprehensive', 'quick-check', 'monthly-review'
+  title: text("title").notNull(),
+  questions: json("questions").$type<Array<{
+    id: string;
+    question: string;
+    type: 'scale' | 'multiple-choice' | 'text';
+    options?: string[];
+    category: string;
+  }>>().default([]),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Individual assessment responses
+export const assessmentResponses = pgTable("assessment_responses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  assessmentId: varchar("assessment_id").references(() => wellnessAssessments.id),
+  userId: varchar("user_id").references(() => users.id),
+  responses: json("responses").$type<Record<string, any>>().default({}),
+  totalScore: real("total_score"),
+  categoryScores: json("category_scores").$type<Record<string, number>>().default({}),
+  recommendations: json("recommendations").$type<string[]>().default([]),
+  completedAt: timestamp("completed_at").defaultNow(),
+});
+
 // Survey responses (anonymous)
 export const surveyResponses = pgTable("survey_responses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -140,6 +169,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   avatarUrl: true,
   timezone: true,
   preferences: true,
+}).partial({
+  avatarUrl: true,
+  timezone: true,
+  preferences: true,
 });
 
 export const insertJournalSchema = createInsertSchema(journals).pick({
@@ -170,6 +203,23 @@ export const insertAppointmentSchema = createInsertSchema(appointments).pick({
   notes: true,
 });
 
+export const insertWellnessAssessmentSchema = createInsertSchema(wellnessAssessments).pick({
+  userId: true,
+  assessmentType: true,
+  title: true,
+  questions: true,
+  isActive: true,
+});
+
+export const insertAssessmentResponseSchema = createInsertSchema(assessmentResponses).pick({
+  assessmentId: true,
+  userId: true,
+  responses: true,
+  totalScore: true,
+  categoryScores: true,
+  recommendations: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -186,6 +236,12 @@ export type MoodEntry = typeof moodEntries.$inferSelect;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 
+export type InsertWellnessAssessment = z.infer<typeof insertWellnessAssessmentSchema>;
+export type WellnessAssessment = typeof wellnessAssessments.$inferSelect;
+
+export type InsertAssessmentResponse = z.infer<typeof insertAssessmentResponseSchema>;
+export type AssessmentResponse = typeof assessmentResponses.$inferSelect;
+
 export type Therapist = typeof therapists.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
@@ -193,3 +249,9 @@ export type Employee = typeof employees.$inferSelect;
 export type WellbeingSurvey = typeof wellbeingSurveys.$inferSelect;
 export type SurveyResponse = typeof surveyResponses.$inferSelect;
 export type BuddyMatch = typeof buddyMatches.$inferSelect;
+
+export type InsertWellnessAssessment = z.infer<typeof insertWellnessAssessmentSchema>;
+export type WellnessAssessment = typeof wellnessAssessments.$inferSelect;
+
+export type InsertAssessmentResponse = z.infer<typeof insertAssessmentResponseSchema>;
+export type AssessmentResponse = typeof assessmentResponses.$inferSelect;

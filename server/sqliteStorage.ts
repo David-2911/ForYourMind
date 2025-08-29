@@ -118,6 +118,28 @@ export class SqliteStorage {
       created_at INTEGER
     )`);
 
+    // Wellness Assessments
+    createStatements.push(`CREATE TABLE IF NOT EXISTS wellness_assessments (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      assessment_type TEXT,
+      title TEXT,
+      questions TEXT,
+      is_active INTEGER,
+      created_at INTEGER
+    )`);
+
+    createStatements.push(`CREATE TABLE IF NOT EXISTS assessment_responses (
+      id TEXT PRIMARY KEY,
+      assessment_id TEXT,
+      user_id TEXT,
+      responses TEXT,
+      total_score REAL,
+      category_scores TEXT,
+      recommendations TEXT,
+      completed_at INTEGER
+    )`);
+
     const tx = this.db.transaction(() => {
       for (const s of createStatements) this.db.prepare(s).run();
     });
@@ -400,6 +422,183 @@ export class SqliteStorage {
   async getBuddyMatches(userId: string): Promise<any[]> {
     const rows = this.db.prepare('SELECT * FROM buddy_matches WHERE user_a_id = ? OR user_b_id = ? ORDER BY created_at DESC').all(userId, userId);
     return rows.map((r: any) => ({ id: r.id, userAId: r.user_a_id, userBId: r.user_b_id, compatibilityScore: r.compatibility_score, status: r.status, createdAt: new Date(r.created_at) }));
+  }
+
+  // --- Wellness Assessments ---
+  async getWellnessAssessments(userId: string): Promise<any[]> {
+    // Check if user has any assessments, if not create default one
+    const existing = this.db.prepare('SELECT * FROM wellness_assessments WHERE user_id = ?').all(userId);
+    if (existing.length === 0) {
+      this.createDefaultAssessment(userId);
+    }
+
+    const rows = this.db.prepare('SELECT * FROM wellness_assessments WHERE user_id = ? AND is_active = 1').all(userId);
+    return rows.map((r: any) => ({
+      id: r.id,
+      userId: r.user_id,
+      assessmentType: r.assessment_type,
+      title: r.title,
+      questions: JSON.parse(r.questions),
+      isActive: r.is_active === 1,
+      createdAt: new Date(r.created_at)
+    }));
+  }
+
+  async getWellnessAssessment(id: string): Promise<any> {
+    const row = this.db.prepare('SELECT * FROM wellness_assessments WHERE id = ?').get(id);
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      userId: row.user_id,
+      assessmentType: row.assessment_type,
+      title: row.title,
+      questions: JSON.parse(row.questions),
+      isActive: row.is_active === 1,
+      createdAt: new Date(row.created_at)
+    };
+  }
+
+  async createAssessmentResponse(response: any): Promise<any> {
+    const id = randomUUID();
+    this.db.prepare(`
+      INSERT INTO assessment_responses (id, assessment_id, user_id, responses, total_score, category_scores, recommendations, completed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      response.assessmentId,
+      response.userId,
+      JSON.stringify(response.responses),
+      response.totalScore,
+      JSON.stringify(response.categoryScores),
+      JSON.stringify(response.recommendations),
+      Date.now()
+    );
+
+    return {
+      id,
+      ...response,
+      completedAt: new Date()
+    };
+  }
+
+  async getUserAssessmentResponses(userId: string): Promise<any[]> {
+    const rows = this.db.prepare('SELECT * FROM assessment_responses WHERE user_id = ? ORDER BY completed_at DESC').all(userId);
+    return rows.map((r: any) => ({
+      id: r.id,
+      assessmentId: r.assessment_id,
+      userId: r.user_id,
+      responses: JSON.parse(r.responses),
+      totalScore: r.total_score,
+      categoryScores: JSON.parse(r.category_scores),
+      recommendations: JSON.parse(r.recommendations),
+      completedAt: new Date(r.completed_at)
+    }));
+  }
+
+  async getLatestAssessmentResponse(userId: string): Promise<any> {
+    const row = this.db.prepare('SELECT * FROM assessment_responses WHERE user_id = ? ORDER BY completed_at DESC LIMIT 1').get(userId);
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      assessmentId: row.assessment_id,
+      userId: row.user_id,
+      responses: JSON.parse(row.responses),
+      totalScore: row.total_score,
+      categoryScores: JSON.parse(row.category_scores),
+      recommendations: JSON.parse(row.recommendations),
+      completedAt: new Date(row.completed_at)
+    };
+  }
+
+  private createDefaultAssessment(userId: string) {
+    const assessmentId = randomUUID();
+    const questions = [
+      {
+        id: 'stress-level',
+        question: 'How would you rate your current stress level?',
+        type: 'scale',
+        options: ['Very Low', 'Low', 'Moderate', 'High', 'Very High'],
+        category: 'Stress Management'
+      },
+      {
+        id: 'sleep-quality',
+        question: 'How would you describe your sleep quality over the past week?',
+        type: 'scale',
+        options: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
+        category: 'Sleep & Rest'
+      },
+      {
+        id: 'work-life-balance',
+        question: 'How satisfied are you with your work-life balance?',
+        type: 'scale',
+        options: ['Very Dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'],
+        category: 'Work-Life Balance'
+      },
+      {
+        id: 'social-support',
+        question: 'How strong is your social support network?',
+        type: 'scale',
+        options: ['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'],
+        category: 'Social Support'
+      },
+      {
+        id: 'physical-activity',
+        question: 'How often do you engage in physical activity?',
+        type: 'scale',
+        options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Very Often'],
+        category: 'Physical Health'
+      },
+      {
+        id: 'emotional-regulation',
+        question: 'How well can you manage your emotions?',
+        type: 'scale',
+        options: ['Poorly', 'Below Average', 'Average', 'Above Average', 'Excellent'],
+        category: 'Emotional Regulation'
+      },
+      {
+        id: 'mindfulness-practice',
+        question: 'How often do you practice mindfulness or meditation?',
+        type: 'scale',
+        options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Daily'],
+        category: 'Mindfulness'
+      },
+      {
+        id: 'goal-clarity',
+        question: 'How clear are you about your personal and professional goals?',
+        type: 'scale',
+        options: ['Not Clear', 'Somewhat Clear', 'Moderately Clear', 'Very Clear', 'Extremely Clear'],
+        category: 'Goal Setting'
+      },
+      {
+        id: 'energy-levels',
+        question: 'How would you describe your energy levels during the day?',
+        type: 'scale',
+        options: ['Very Low', 'Low', 'Moderate', 'High', 'Very High'],
+        category: 'Energy & Vitality'
+      },
+      {
+        id: 'overall-wellbeing',
+        question: 'Overall, how would you rate your current wellbeing?',
+        type: 'scale',
+        options: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
+        category: 'Overall Wellbeing'
+      }
+    ];
+
+    this.db.prepare(`
+      INSERT INTO wellness_assessments (id, user_id, assessment_type, title, questions, is_active, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      assessmentId,
+      userId,
+      'comprehensive',
+      'Comprehensive Wellness Assessment',
+      JSON.stringify(questions),
+      1,
+      Date.now()
+    );
   }
 }
 

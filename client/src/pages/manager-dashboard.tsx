@@ -13,7 +13,7 @@ export default function ManagerDashboard() {
 
   // Fetch wellness metrics for organization
   const { data: metrics } = useQuery<WellnessMetrics>({
-    queryKey: ["/api/admin/wellness-metrics/org-123"], // Mock org ID
+    queryKey: ["/admin/wellness-metrics/org-123"], // Mock org ID
   });
 
   const departmentColors = {

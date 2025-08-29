@@ -55,6 +55,13 @@ export interface IStorage {
   createBuddyMatch(userA: string, userB: string, score?: number): Promise<any>;
   updateBuddyMatchStatus(matchId: string, status: 'pending' | 'accepted' | 'declined'): Promise<boolean>;
   getBuddyMatches(userId: string): Promise<any[]>;
+
+  // Wellness Assessments
+  getWellnessAssessments(userId: string): Promise<any[]>;
+  getWellnessAssessment(id: string): Promise<any>;
+  createAssessmentResponse(response: any): Promise<any>;
+  getUserAssessmentResponses(userId: string): Promise<any[]>;
+  getLatestAssessmentResponse(userId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -482,6 +489,115 @@ export class MemStorage implements IStorage {
     };
     this.employees.set(id, employee);
     return employee;
+  }
+
+  // --- Wellness Assessments (in-memory) ---
+  async getWellnessAssessments(userId: string): Promise<any[]> {
+    // Return a default comprehensive assessment for now
+    return [{
+      id: 'comprehensive-001',
+      userId,
+      assessmentType: 'comprehensive',
+      title: 'Comprehensive Wellness Assessment',
+      questions: [
+        {
+          id: 'stress-level',
+          question: 'How would you rate your current stress level?',
+          type: 'scale',
+          options: ['Very Low', 'Low', 'Moderate', 'High', 'Very High'],
+          category: 'Stress Management'
+        },
+        {
+          id: 'sleep-quality',
+          question: 'How would you describe your sleep quality over the past week?',
+          type: 'scale',
+          options: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
+          category: 'Sleep & Rest'
+        },
+        {
+          id: 'work-life-balance',
+          question: 'How satisfied are you with your work-life balance?',
+          type: 'scale',
+          options: ['Very Dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'],
+          category: 'Work-Life Balance'
+        },
+        {
+          id: 'social-support',
+          question: 'How strong is your social support network?',
+          type: 'scale',
+          options: ['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'],
+          category: 'Social Support'
+        },
+        {
+          id: 'physical-activity',
+          question: 'How often do you engage in physical activity?',
+          type: 'scale',
+          options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Very Often'],
+          category: 'Physical Health'
+        },
+        {
+          id: 'emotional-regulation',
+          question: 'How well can you manage your emotions?',
+          type: 'scale',
+          options: ['Poorly', 'Below Average', 'Average', 'Above Average', 'Excellent'],
+          category: 'Emotional Regulation'
+        },
+        {
+          id: 'mindfulness-practice',
+          question: 'How often do you practice mindfulness or meditation?',
+          type: 'scale',
+          options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Daily'],
+          category: 'Mindfulness'
+        },
+        {
+          id: 'goal-clarity',
+          question: 'How clear are you about your personal and professional goals?',
+          type: 'scale',
+          options: ['Not Clear', 'Somewhat Clear', 'Moderately Clear', 'Very Clear', 'Extremely Clear'],
+          category: 'Goal Setting'
+        },
+        {
+          id: 'energy-levels',
+          question: 'How would you describe your energy levels during the day?',
+          type: 'scale',
+          options: ['Very Low', 'Low', 'Moderate', 'High', 'Very High'],
+          category: 'Energy & Vitality'
+        },
+        {
+          id: 'overall-wellbeing',
+          question: 'Overall, how would you rate your current wellbeing?',
+          type: 'scale',
+          options: ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
+          category: 'Overall Wellbeing'
+        }
+      ],
+      isActive: true,
+      createdAt: new Date()
+    }];
+  }
+
+  async getWellnessAssessment(id: string): Promise<any> {
+    const assessments = await this.getWellnessAssessments('dummy-user');
+    return assessments.find(a => a.id === id);
+  }
+
+  async createAssessmentResponse(response: any): Promise<any> {
+    // In a real implementation, this would save to a database
+    return {
+      id: randomUUID(),
+      ...response,
+      completedAt: new Date()
+    };
+  }
+
+  async getUserAssessmentResponses(userId: string): Promise<any[]> {
+    // Return empty array for now - in real implementation would fetch from database
+    return [];
+  }
+
+  async getLatestAssessmentResponse(userId: string): Promise<any> {
+    const responses = await this.getUserAssessmentResponses(userId);
+    return responses.length > 0 ? responses[responses.length - 1] : null;
   }
 }
 

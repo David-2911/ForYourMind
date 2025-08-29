@@ -16,6 +16,8 @@ import MoodSelector from "@/components/common/mood-selector";
 import JournalingModal from "@/components/employee/journaling-modal";
 import TherapistsModal from "@/components/employee/therapists-modal";
 import AnonymousRantsModal from "@/components/employee/anonymous-rants-modal";
+import WellnessAssessmentModal from "@/components/employee/wellness-assessment-modal";
+import BreathingExerciseModal from "@/components/employee/breathing-exercise-modal";
 import ProfileModal from "@/components/common/profile-modal";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,11 +34,20 @@ type ActiveSection =
   | 'wellness'
   | 'resources';
 
+type AssessmentResponse = {
+  totalScore: number;
+  recommendations: string[];
+  completedAt: string;
+};
+
 export default function EmployeeDashboard() {
   const [showJournaling, setShowJournaling] = useState(false);
   const [showTherapists, setShowTherapists] = useState(false);
   const [showRants, setShowRants] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showWellnessAssessment, setShowWellnessAssessment] = useState(false);
+  const [showBreathingExercise, setShowBreathingExercise] = useState(false);
+  const [breathingType, setBreathingType] = useState<'box' | '4-7-8'>('box');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [currentGuidedSession, setCurrentGuidedSession] = useState<string | null>(null);
@@ -59,7 +70,13 @@ export default function EmployeeDashboard() {
 
   // Fetch user's mood entries for streak calculation
   const { data: moodEntries = [] } = useQuery<MoodEntry[]>({
-    queryKey: ["/api/mood"],
+    queryKey: ["/mood"],
+  });
+
+  // Fetch latest assessment response
+  const { data: latestAssessment } = useQuery<AssessmentResponse>({
+    queryKey: ["/wellness-assessments/responses/latest"],
+    enabled: !!user,
   });
 
   // Calculate wellness streak from mood entries
@@ -120,7 +137,7 @@ export default function EmployeeDashboard() {
 
   // Fetch recent journals
   const { data: journals = [] } = useQuery<Journal[]>({
-    queryKey: ["/api/journals"],
+    queryKey: ["/journals"],
   });
 
   // Calculate today's sessions (mood entries + journal entries)
@@ -175,18 +192,25 @@ export default function EmployeeDashboard() {
     // Bonus for activity (max 1 point)
     const activityBonus = Math.min(todaySessions * 0.5, 1);
 
+    // Include assessment score if available (max 2 points)
+    let assessmentBonus = 0;
+    if (latestAssessment?.totalScore) {
+      // Assessment score is already 0-10, convert to bonus points
+      assessmentBonus = Math.min(latestAssessment.totalScore * 0.2, 2);
+    }
+
     // Calculate final score (0-10 scale)
-    const finalScore = Math.min(moodScore + streakBonus + activityBonus, 10);
+    const finalScore = Math.min(moodScore + streakBonus + activityBonus + assessmentBonus, 10);
 
     return finalScore.toFixed(1);
-  }, [moodEntries, wellnessStreak, todaySessions]);
+  }, [moodEntries, wellnessStreak, todaySessions, latestAssessment]);
 
   const recordMoodMutation = useMutation({
     mutationFn: async (moodScore: number) => {
-      return apiRequest("POST", "/api/mood", { moodScore });
+      return apiRequest("POST", "/mood", { moodScore });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mood"] });
+      queryClient.invalidateQueries({ queryKey: ["/mood"] });
       toast({
         title: "Mood recorded",
         description: "Thanks for checking in with yourself today",
@@ -408,9 +432,18 @@ export default function EmployeeDashboard() {
         <div className="mt-4 pt-4 border-t border-border/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 text-xs md:text-sm text-muted-foreground">
-              <span>📚 15+ articles available</span>
-              <span>📰 Weekly newsletter</span>
-              <span>🎯 Personalized recommendations</span>
+                <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-primary" />
+                <span>15+ articles available</span>
+                </div>
+                <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-secondary" />
+                <span>Weekly newsletter</span>
+                </div>
+                <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-accent" />
+                <span>Personalized recommendations</span>
+                </div>
             </div>
             <Button
               variant="outline"
@@ -535,8 +568,13 @@ export default function EmployeeDashboard() {
                   size="sm"
                   variant={currentGuidedSession === session.id && isPlaying ? "default" : "outline"}
                   onClick={() => {
-                    setCurrentGuidedSession(session.id);
-                    setIsPlaying(!isPlaying);
+                    if (session.id === 'breathing') {
+                      setBreathingType('4-7-8');
+                      setShowBreathingExercise(true);
+                    } else {
+                      setCurrentGuidedSession(session.id);
+                      setIsPlaying(!isPlaying);
+                    }
                   }}
                 >
                   {currentGuidedSession === session.id && isPlaying ? <Settings className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -561,7 +599,17 @@ export default function EmployeeDashboard() {
             <div key={technique.id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
               <h4 className="font-medium mb-2">{technique.title}</h4>
               <p className="text-sm text-muted-foreground">{technique.description}</p>
-              <Button size="sm" variant="ghost" className="mt-2">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="mt-2"
+                onClick={() => {
+                  if (technique.id === 'box-breathing') {
+                    setBreathingType('box');
+                    setShowBreathingExercise(true);
+                  }
+                }}
+              >
                 Try Now
               </Button>
             </div>
@@ -777,7 +825,9 @@ export default function EmployeeDashboard() {
             </div>
           </div>
         </div>
-        <Button className="w-full">Start Assessment</Button>
+        <Button className="w-full" onClick={() => setShowWellnessAssessment(true)}>
+          Start Assessment
+        </Button>
       </GlassmorphicCard>
 
       {/* Progress Tracking */}
@@ -785,21 +835,46 @@ export default function EmployeeDashboard() {
         <h3 className="text-xl font-semibold mb-4">Your Progress</h3>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">8.2</div>
+            <div className="text-3xl font-bold text-primary mb-2">
+              {latestAssessment?.totalScore?.toFixed(1) || wellnessScore}
+            </div>
             <p className="text-muted-foreground">Wellness Score</p>
-            <p className="text-sm text-green-500">+0.3 this month</p>
+            <p className="text-sm text-green-500">
+              {latestAssessment ? `From assessment` : `↗ +0.3 this week`}
+            </p>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-accent mb-2">23</div>
-            <p className="text-muted-foreground">Sessions Completed</p>
-            <p className="text-sm text-green-500">+5 this week</p>
+            <div className="text-3xl font-bold text-accent mb-2">
+              {latestAssessment ? '1' : '23'}
+            </div>
+            <p className="text-muted-foreground">
+              {latestAssessment ? 'Assessment Completed' : 'Sessions Completed'}
+            </p>
+            <p className="text-sm text-green-500">
+              {latestAssessment ? 'Latest assessment' : '+5 this week'}
+            </p>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-secondary mb-2">12</div>
+            <div className="text-3xl font-bold text-secondary mb-2">{wellnessStreak}</div>
             <p className="text-muted-foreground">Day Streak</p>
             <p className="text-sm text-green-500">Personal best!</p>
           </div>
         </div>
+
+        {/* Show recommendations if available */}
+        {latestAssessment?.recommendations && latestAssessment.recommendations.length > 0 && (
+          <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+            <h4 className="font-semibold mb-2 text-primary">Personalized Recommendations</h4>
+            <ul className="space-y-1">
+              {latestAssessment.recommendations.slice(0, 3).map((rec: string, index: number) => (
+                <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span>
+                  {rec}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </GlassmorphicCard>
     </div>
   );
@@ -1140,6 +1215,23 @@ export default function EmployeeDashboard() {
       <AnonymousRantsModal
         isOpen={showRants}
         onClose={() => setShowRants(false)}
+      />
+      <BreathingExerciseModal
+        isOpen={showBreathingExercise}
+        onClose={() => setShowBreathingExercise(false)}
+        breathingType={breathingType}
+      />
+      <WellnessAssessmentModal
+        isOpen={showWellnessAssessment}
+        onClose={() => setShowWellnessAssessment(false)}
+        onComplete={(score, recommendations) => {
+          // Update wellness score and show recommendations
+          queryClient.invalidateQueries({ queryKey: ["/mood"] });
+          toast({
+            title: "Assessment completed!",
+            description: `Your wellness score: ${score}/10`,
+          });
+        }}
       />
     </div>
   );

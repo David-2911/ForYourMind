@@ -44,7 +44,7 @@ export default function TherapistsModal({ isOpen, onClose }: TherapistsModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphic max-w-6xl max-h-[90vh] overflow-y-auto animate-slide-up border-none">
+      <DialogContent className="glassmorphic max-w-6xl max-h-[90vh] overflow-y-auto animate-slide-up border-none [&>button]:hidden">
         <DialogHeader className="flex flex-row justify-between items-center mb-6">
           <DialogTitle className="text-2xl font-bold">Find Your Therapist</DialogTitle>
           <Button

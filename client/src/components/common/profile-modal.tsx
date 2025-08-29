@@ -35,7 +35,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
-    apiRequest("GET", "/api/user/profile").then((res: any) => {
+    apiRequest("GET", "/user/profile").then((res: any) => {
       setProfile(res);
       setFormData({
         displayName: res?.displayName || "",
@@ -46,7 +46,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   const handleSave = async () => {
     try {
-      await apiRequest("PUT", "/api/user/profile", formData);
+      await apiRequest("PUT", "/user/profile", formData);
       setProfile({ ...profile, ...formData });
       setEditing(false);
       toast({
@@ -227,14 +227,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <Brain className="w-5 h-5 mr-3" />
                     <div className="text-left">
                       <p className="font-medium">Help Center</p>
-                      <p className="text-sm text-muted-foreground">Find answers to common questions</p>
+                      <p className="text-xs text-muted-foreground">Find answers to common questions</p>
                     </div>
                   </Button>
                   <Button variant="outline" className="justify-start h-auto p-4">
                     <MessageCircle className="w-5 h-5 mr-3" />
                     <div className="text-left">
                       <p className="font-medium">Contact Support</p>
-                      <p className="text-sm text-muted-foreground">Get help from our team</p>
+                      <p className="text-xs text-muted-foreground">Get help from our team</p>
                     </div>
                   </Button>
                 </div>

@@ -70,7 +70,7 @@ export default function RoleSelectionModal({
                     <role.icon className="text-2xl text-white" />
                   </div>
                   <h4 className="font-semibold text-foreground mb-2">{role.title}</h4>
-                  <p className="text-sm text-muted-foreground font-medium">
+                  <p className="text-xs text-muted-foreground font-medium">
                     {role.description}
                   </p>
                 </GlassmorphicCard>

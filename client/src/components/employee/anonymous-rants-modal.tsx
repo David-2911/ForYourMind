@@ -25,21 +25,22 @@ export default function AnonymousRantsModal({ isOpen, onClose }: AnonymousRantsM
   const queryClient = useQueryClient();
 
   const { data: rants = [], isLoading } = useQuery({
-    queryKey: ["/api/rants"],
+    queryKey: ["/rants"],
     enabled: isOpen,
   });
 
   const createRantMutation = useMutation({
     mutationFn: async (data: { content: string }) => {
-      return apiRequest("POST", "/api/rants", data);
+      return apiRequest("POST", "/rants", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/rants"] });
+      queryClient.invalidateQueries({ queryKey: ["/rants"] });
       toast({
-        title: "Posted anonymously",
-        description: "Your thoughts have been shared safely",
+        title: "Rant submitted",
+        description: "Your thoughts have been shared anonymously",
       });
       setContent("");
+      onClose();
     },
     onError: (error) => {
       toast({
@@ -52,10 +53,10 @@ export default function AnonymousRantsModal({ isOpen, onClose }: AnonymousRantsM
 
   const supportRantMutation = useMutation({
     mutationFn: async (rantId: string) => {
-      return apiRequest("POST", `/api/rants/${rantId}/support`, {});
+      return apiRequest("POST", `/rants/${rantId}/support`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/rants"] });
+      queryClient.invalidateQueries({ queryKey: ["/rants"] });
     },
   });
 
@@ -78,7 +79,7 @@ export default function AnonymousRantsModal({ isOpen, onClose }: AnonymousRantsM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphic max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up border-none">
+      <DialogContent className="glassmorphic max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up border-none [&>button]:hidden">
         <DialogHeader className="flex flex-row justify-between items-center mb-6">
           <DialogTitle className="text-2xl font-bold">Safe Vent Space</DialogTitle>
           <Button
