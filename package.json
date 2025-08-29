@@ -8,8 +8,10 @@
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:vercel": "bash ./vercel-build.sh",
     "build:frontend": "bash ./render-frontend-build.sh",
+    "build:render": "./render-build.sh",
     "serve:frontend": "node serve-frontend.js",
     "start": "NODE_ENV=production node dist/index.js",
+    "start:render": "NODE_ENV=production node start.js",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },

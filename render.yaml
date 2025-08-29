@@ -4,9 +4,9 @@ services:
     name: mindfulme-api
     env: node
     region: oregon # Choose the region closest to your users
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    healthCheckPath: /api/health
+    buildCommand: npm install && npm run build:render
+    startCommand: npm run start:render
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -15,15 +15,9 @@ services:
       - key: USE_SQLITE
         value: false
       - key: JWT_SECRET
-        fromDatabase:
-          name: mindfulme-db
-          property: connectionString
-          key: JWT_SECRET
+        generateValue: true
       - key: COOKIE_SECRET
-        fromDatabase:
-          name: mindfulme-db
-          property: connectionString
-          key: COOKIE_SECRET
+        generateValue: true
       - key: DATABASE_URL
         fromDatabase:
           name: mindfulme-db

@@ -85,8 +85,13 @@ const calculateAssessmentScore = (questions: any[], responses: Record<string, an
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint for Render deployment
+  // Health check endpoints for Render deployment
   app.get("/api/health", (req: Request, res: Response) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+  
+  // Standard health check route (no /api prefix) for Render's health checks
+  app.get("/health", (req: Request, res: Response) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
