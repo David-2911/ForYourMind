@@ -5,10 +5,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:vercel": "bash ./vercel-build.sh",
     "build:frontend": "bash ./render-frontend-build.sh",
     "build:render": "./render-build.sh",
+    "build:failsafe": "./render-failsafe-build.sh",
     "serve:frontend": "node serve-frontend.js",
     "start": "NODE_ENV=production node dist/index.js",
     "start:render": "NODE_ENV=production node start.js",
