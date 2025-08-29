@@ -25,8 +25,8 @@ This guide will help you deploy the MindfulMe application on Render.com.
 2. Connect your repository
 3. Configure the service:
    - **Name**: mindfulme-api
-   - **Build Command**: `npm install && npm run build:render`
-   - **Start Command**: `npm run start:render`
+   - **Build Command**: `npm install && npm run build:fixed`
+   - **Start Command**: `npm run start`
    - **Plan**: Free (or choose an appropriate tier)
    
 4. Add the following environment variables:
@@ -47,7 +47,7 @@ This guide will help you deploy the MindfulMe application on Render.com.
 2. Connect to the same repository
 3. Configure the service:
    - **Name**: mindfulme-web
-   - **Build Command**: `npm install && npm run build:frontend`
+   - **Build Command**: `npm install && npm run build:frontend:fixed`
    - **Start Command**: `npm run serve:frontend`
    - **Plan**: Free (or choose an appropriate tier)
    

@@ -4,8 +4,8 @@ services:
     name: mindfulme-api
     env: node
     region: oregon # Choose the region closest to your users
-    buildCommand: npm install && npm run build:render
-    startCommand: npm run start:render
+    buildCommand: npm install && npm run build:fixed
+    startCommand: npm run start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -31,7 +31,7 @@ services:
     name: mindfulme-web
     env: node
     region: oregon
-    buildCommand: npm install && npm run build:frontend
+    buildCommand: npm install && npm run build:frontend:fixed
     startCommand: npm run serve:frontend
     envVars:
       - key: VITE_API_URL
