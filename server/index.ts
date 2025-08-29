@@ -9,9 +9,21 @@ export const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// Enable CORS with credentials so the client can use httpOnly refresh cookie
-const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+
+// Enable CORS with more flexible configuration for production
+const isDev = process.env.NODE_ENV !== 'production';
+const corsOptions = {
+  origin: isDev 
+    ? 'http://localhost:5173' 
+    : [
+        process.env.CORS_ORIGIN || 'https://mindfulme-web.onrender.com', 
+        'https://mindfulme-api.onrender.com'
+      ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -53,8 +65,14 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Ensure we always respond with JSON, never HTML
+    res.status(status).json({ 
+      message,
+      error: app.get("env") === "development" ? err.stack : undefined
+    });
+    
+    // Log the error but don't throw it (which would crash the server)
+    console.error("Server error:", err);
   });
 
   // importantly only setup vite in development and after

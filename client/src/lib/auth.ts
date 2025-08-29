@@ -1,6 +1,7 @@
 import { User, AuthResponse } from "../types";
 
-const API_BASE = "/api";
+// Use the environment variable if available, otherwise fall back to relative path
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 class AuthService {
   public token: string | null = null;
@@ -42,6 +43,8 @@ class AuthService {
 
   async login(email: string, password: string, organizationCode?: string): Promise<AuthResponse> {
     try {
+      console.log(`Attempting login to ${API_BASE}/auth/login`);
+      
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         credentials: 'include',
@@ -50,8 +53,18 @@ class AuthService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Login failed");
+        console.error(`Login failed with status ${response.status}`);
+        
+        // Try to parse response as JSON, but handle if it's not
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Login failed");
+        } catch (parseError) {
+          // If we can't parse as JSON, get the text and log it
+          const text = await response.text();
+          console.error("Response is not valid JSON:", text.substring(0, 100));
+          throw new Error(`Login failed: Server returned invalid response (${response.status})`);
+        }
       }
 
       const data: AuthResponse = await response.json();
@@ -94,6 +107,8 @@ class AuthService {
     role: "individual" | "manager" | "admin";
   }): Promise<AuthResponse> {
     try {
+      console.log(`Attempting registration to ${API_BASE}/auth/register`);
+      
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         credentials: 'include',
@@ -102,8 +117,18 @@ class AuthService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Registration failed");
+        console.error(`Registration failed with status ${response.status}`);
+        
+        // Try to parse response as JSON, but handle if it's not
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Registration failed");
+        } catch (parseError) {
+          // If we can't parse as JSON, get the text and log it
+          const text = await response.text();
+          console.error("Response is not valid JSON:", text.substring(0, 100));
+          throw new Error(`Registration failed: Server returned invalid response (${response.status})`);
+        }
       }
 
       const data: AuthResponse = await response.json();
