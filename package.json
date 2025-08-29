@@ -10,6 +10,7 @@
     "build:frontend": "bash ./render-frontend-build.sh",
     "build:render": "./render-build.sh",
     "build:failsafe": "./render-failsafe-build.sh",
+    "build:emergency": "./render-emergency-build.sh",
     "serve:frontend": "node serve-frontend.js",
     "start": "NODE_ENV=production node dist/index.js",
     "start:render": "NODE_ENV=production node start.js",
