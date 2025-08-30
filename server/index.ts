@@ -6,7 +6,7 @@ import { log } from "./vite"; // Only import log
 import { initializeDatabase } from "./database";
 // no path import needed here; static serving resolves internally
 
-export const app = express();
+const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

@@ -1,9 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { authService } from "./auth";
 
-// Get the API base URL from environment variable or default to relative path
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
-
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -16,6 +13,7 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<any> {
+  const API_BASE = "/api";
   const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
   const token = authService.getToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -60,7 +58,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const url = `${API_BASE}/${queryKey.join("/")}`;
+    const url = queryKey.join("/") as string;
 
   const token = authService.getToken();
   const headers: Record<string, string> = {};
