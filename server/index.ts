@@ -2,8 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { log } from "./vite"; // Only import log
 import { initializeDatabase } from "./database";
+import path from "path";
 
 export const app = express();
 app.use(express.json());
@@ -79,9 +80,20 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
+    // Dynamically import vite in development only
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Serve static files in production without requiring vite
+    app.use(express.static(path.join(__dirname, '../public')));
+    
+    // Catch-all route to serve index.html for client-side routing
+    app.get('*', (req, res, next) => {
+      // Skip API routes
+      if (req.path.startsWith('/api/')) return next();
+      
+      res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
