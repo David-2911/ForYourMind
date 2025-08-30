@@ -27,19 +27,27 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
+# Test PostgreSQL connection
+echo "Testing PostgreSQL connection..."
+if ! psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+    echo "Error: Could not connect to PostgreSQL database."
+    echo "Please check your DATABASE_URL value. It should be in the format:"
+    echo "postgresql://username:password@hostname:port/database"
+    exit 1
+fi
+echo "PostgreSQL connection successful!"
+
 SQLITE_DB="./data/db.sqlite"
 if [ ! -f "$SQLITE_DB" ]; then
     echo "Error: SQLite database file not found at $SQLITE_DB"
     exit 1
 fi
 
-echo "Step 1: Installing Drizzle Kit if not already installed..."
-npm install -g drizzle-kit
+echo "Step 1: Using project's Drizzle Kit..."
+# Use npx to run the locally installed drizzle-kit
+npx drizzle-kit generate --schema=./shared/schema.ts --out=./migrations --dialect=pg
 
-echo "Step 2: Generating PostgreSQL migration schema..."
-drizzle-kit generate:pg --out=migrations
-
-echo "Step 3: Preparing to migrate data..."
+echo "Step 2: Preparing to migrate data..."
 # Extract table names from SQLite
 TABLES=$(sqlite3 $SQLITE_DB ".tables")
 
@@ -53,11 +61,14 @@ for TABLE in $TABLES; do
     sqlite3 -header -csv $SQLITE_DB "SELECT * FROM $TABLE;" > "./temp_migration/${TABLE}.csv"
     
     # Create table structure in PostgreSQL and import CSV
-    # (This is a simplified approach - in a real scenario, you might need more sophisticated handling)
     echo "Importing data into PostgreSQL table: $TABLE"
     
     # Use \COPY command in psql to import data
-    psql "$DATABASE_URL" -c "\COPY $TABLE FROM './temp_migration/${TABLE}.csv' CSV HEADER;"
+    if ! psql "$DATABASE_URL" -c "\COPY $TABLE FROM './temp_migration/${TABLE}.csv' CSV HEADER;" ; then
+        echo "Error importing table $TABLE. Check connection string and permissions."
+        echo "You can retry importing this table manually with:"
+        echo "psql \"$DATABASE_URL\" -c \"\COPY $TABLE FROM './temp_migration/${TABLE}.csv' CSV HEADER;\""
+    fi
 done
 
 echo "Migration completed!"
