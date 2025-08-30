@@ -3,7 +3,6 @@ import { type User, type InsertUser, type Journal, type InsertJournal, type Anon
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import SqliteStorage from "./sqliteStorage";
-import PostgresStorage from "./postgresStorage";
 
 export interface IStorage {
   // User management
@@ -602,11 +601,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Priority: if DATABASE_URL present use PostgresStorage, else if USE_SQLITE or SQLITE_DB_PATH use SQLite, otherwise in-memory
-const hasDatabaseUrl = !!process.env.DATABASE_URL;
+// Use SQLite if environment requests it, otherwise use in-memory
 const useSqlite = !!process.env.USE_SQLITE || !!process.env.SQLITE_DB_PATH;
-export const storage: IStorage = hasDatabaseUrl
-  ? new (PostgresStorage as any)(process.env.DATABASE_URL as string)
-  : useSqlite
-    ? new (SqliteStorage as any)(process.env.SQLITE_DB_PATH || './data/db.sqlite')
-    : new MemStorage();
+export const storage: IStorage = useSqlite ? new (SqliteStorage as any)(process.env.SQLITE_DB_PATH || './data/db.sqlite') : new MemStorage();
