@@ -160,6 +160,14 @@ export const buddyMatches = pgTable("buddy_matches", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Refresh tokens for authentication
+export const refreshTokens = pgTable("refresh_tokens", {
+  token: text("token").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,

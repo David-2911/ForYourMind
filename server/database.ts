@@ -24,7 +24,28 @@ export async function initializeDatabase() {
     const sql = neon(databaseUrl);
     db = drizzle(sql, { schema });
     console.log("Neon database connected successfully");
-    // In production we'd run migrations and seed data here if needed.
+
+    // Check if all required tables exist
+    try {
+      const tableResult = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
+      const tables = tableResult.map(r => r.table_name);
+      
+      // Log detected tables
+      console.log("Detected database tables:", tables);
+      
+      // Check for specific tables we need
+      const requiredTables = ['users', 'journals', 'refresh_tokens'];
+      const missingTables = requiredTables.filter(table => !tables.includes(table));
+      
+      if (missingTables.length > 0) {
+        console.warn(`Missing required tables: ${missingTables.join(', ')}`);
+        console.warn("Schema may not be fully applied. Make sure migrations have been run.");
+      } else {
+        console.log("All required tables found in the database");
+      }
+    } catch (error) {
+      console.error("Error checking database tables:", error);
+    }
   } catch (error) {
     console.error("Neon database connection failed:", error);
     // Fall back to in-memory storage
