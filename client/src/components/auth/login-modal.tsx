@@ -132,10 +132,10 @@ export default function LoginModal({
             />
           </div>
 
-          {(role === "manager" || role === "admin") && (
+      {(role === "manager" || role === "admin") && (
             <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.3s' }}>
               <Label htmlFor="orgCode" className="text-foreground font-semibold text-sm md:text-base mb-2 block">
-                {role === "admin" ? "2FA Code" : "Organization Code"}
+        {role === "admin" ? "2FA Code" : "Organization Code"}
               </Label>
               <Input
                 id="orgCode"
@@ -143,8 +143,8 @@ export default function LoginModal({
                 type="text"
                 value={organizationCode}
                 onChange={(e) => setOrganizationCode(e.target.value)}
-                className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
-                placeholder={role === "admin" ? "Enter 2FA code" : "Enter organization code"}
+        className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
+        placeholder={role === "admin" ? "Enter 2FA code" : "Enter organization code"}
               />
             </div>
           )}

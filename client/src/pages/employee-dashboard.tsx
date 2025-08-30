@@ -24,6 +24,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { MoodEntry, Journal } from "../../../shared/schema";
+import ChatbotWidget from "@/components/chatbot/chatbot-widget";
 
 type ActiveSection =
   | 'dashboard'
@@ -1232,6 +1233,15 @@ export default function EmployeeDashboard() {
             description: `Your wellness score: ${score}/10`,
           });
         }}
+      />
+
+      {/* Chatbot */}
+      <ChatbotWidget
+        userName={user?.displayName}
+        onOpenJournal={() => setShowJournaling(true)}
+        onOpenTherapists={() => setShowTherapists(true)}
+        onOpenAssessment={() => setShowWellnessAssessment(true)}
+        onOpenLearn={() => setActiveSection('learn')}
       />
     </div>
   );

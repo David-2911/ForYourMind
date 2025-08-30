@@ -14,9 +14,9 @@ export default function LandingPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"individual" | "manager" | "admin" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"individual" | "manager" | null>(null);
 
-  const handleRoleSelect = (role: "individual" | "manager" | "admin") => {
+  const handleRoleSelect = (role: "individual" | "manager") => {
     setSelectedRole(role);
     setShowRoleModal(false);
     setShowLoginModal(true);
@@ -200,10 +200,10 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
           <div className="space-y-6 md:space-y-8 animate-fade-in text-center lg:text-left">
             <h2 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
-              <span className="hero-accent">Your Complete Mental Wellness Ecosystem</span>
+              <span className="hero-accent">Mental Wellness for Individuals in Nigeria</span>
             </h2>
             <p className="text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Clinical-grade mental health support, peer connections, and data-driven insights — all in one serene platform.
+              Private journaling, mood tracking, peer support, and access to licensed therapists — built for you.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center lg:justify-start">

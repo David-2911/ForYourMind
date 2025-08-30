@@ -9,6 +9,7 @@ import LandingPage from "@/pages/landing";
 import EmployeeDashboard from "@/pages/employee-dashboard";
 import ManagerDashboard from "@/pages/manager-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AdminAccessPage from "@/pages/admin-access";
 import { useAuth } from "@/lib/auth";
 
 function Router() {
@@ -31,7 +32,8 @@ function Router() {
       }} />
       <Route path="/admin" component={() => {
         if (!isAuthenticated || user?.role !== "admin") {
-          return <LandingPage />;
+          // Show dedicated admin access/login page when not authenticated as admin
+          return <AdminAccessPage />;
         }
         return <AdminDashboard />;
       }} />

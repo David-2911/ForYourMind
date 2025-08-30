@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Users, Settings } from "lucide-react";
+import { User, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import { useLocation } from "wouter";
 interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  role: "individual" | "manager" | "admin";
+  role: "individual" | "manager";
   onSwitchToLogin: () => void;
 }
 
@@ -51,13 +51,6 @@ export default function SignupModal({
       description: "Set up team wellness oversight",
       color: "bg-accent",
       redirect: "/manager",
-    },
-    admin: {
-      icon: Settings,
-      title: "Admin Registration",
-      description: "Platform administration access",
-      color: "bg-primary",
-      redirect: "/admin",
     },
   };
 
@@ -190,10 +183,10 @@ export default function SignupModal({
             />
           </div>
 
-          {(role === "manager" || role === "admin") && (
+      {role === "manager" && (
             <div className="animate-fade-in-up px-1" style={{ animationDelay: '0.5s' }}>
               <Label htmlFor="orgCode" className="text-foreground font-semibold text-sm md:text-base mb-2 block">
-                {role === "admin" ? "Admin Access Code" : "Organization Code"}
+        Organization Code
               </Label>
               <Input
                 id="orgCode"
@@ -201,7 +194,7 @@ export default function SignupModal({
                 type="text"
                 value={organizationCode}
                 onChange={(e) => setOrganizationCode(e.target.value)}
-                placeholder={role === "admin" ? "Contact support for code" : "Provided by your organization"}
+        placeholder="Provided by your organization"
                 className="mt-2 bg-background/60 border-border/60 focus:border-primary focus:bg-background/80 transition-all duration-300 text-sm md:text-base py-3 md:py-4 px-4 rounded-lg shadow-sm"
               />
             </div>
