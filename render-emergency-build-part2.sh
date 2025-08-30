@@ -56,7 +56,13 @@ export function getStorageForEnvironment() {
     hasDbUrl: !!databaseUrl
   });
   
-  if (databaseUrl && !useSqlite) {
+  // In production environment on Render, always use PostgresStorage
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (isProduction && databaseUrl) {
+    console.log("Production environment: Using PostgresStorage with DATABASE_URL");
+    return new PostgresStorage();
+  } else if (databaseUrl && !useSqlite) {
     console.log("Using PostgresStorage with DATABASE_URL");
     return new PostgresStorage();
   } else if (useSqlite) {
@@ -333,138 +339,258 @@ EOF
 
 # Create sqliteStorage.js
 cat > dist/sqliteStorage.js << 'EOF'
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+// Conditionally import SQLite packages
+let sqlite3, open;
+try {
+  // Dynamic imports to handle case when SQLite is not installed
+  sqlite3 = await import('sqlite3').then(m => m.default);
+  open = await import('sqlite').then(m => m.open);
+  console.log("SQLite packages loaded successfully");
+} catch (err) {
+  console.warn("SQLite packages not available:", err.message);
+}
 
 export class SqliteStorage {
   constructor() {
-    this.dbPromise = this.initializeDb();
-    console.log("SqliteStorage initialized");
+    if (!sqlite3 || !open) {
+      console.warn("SqliteStorage: SQLite packages not available, using stub implementation");
+      this.isStub = true;
+    } else {
+      this.dbPromise = this.initializeDb();
+      console.log("SqliteStorage initialized");
+    }
   }
 
   async initializeDb() {
-    const db = await open({
-      filename: './data/db.sqlite',
-      driver: sqlite3.Database
-    });
+    if (this.isStub) return null;
+    
+    try {
+      const db = await open({
+        filename: './data/db.sqlite',
+        driver: sqlite3.Database
+      });
 
-    // Create tables if they don't exist
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
-        password TEXT,
-        name TEXT
-      );
-      
-      CREATE TABLE IF NOT EXISTS journals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER,
-        content TEXT,
-        created TEXT,
-        mood TEXT,
-        FOREIGN KEY (userId) REFERENCES users(id)
-      );
-      
-      CREATE TABLE IF NOT EXISTS refresh_tokens (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER,
-        token TEXT,
-        FOREIGN KEY (userId) REFERENCES users(id)
-      );
-    `);
+      // Create tables if they don't exist
+      await db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT UNIQUE,
+          password TEXT,
+          name TEXT
+        );
+        
+        CREATE TABLE IF NOT EXISTS journals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          userId INTEGER,
+          content TEXT,
+          created TEXT,
+          mood TEXT,
+          FOREIGN KEY (userId) REFERENCES users(id)
+        );
+        
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          userId INTEGER,
+          token TEXT,
+          FOREIGN KEY (userId) REFERENCES users(id)
+        );
+      `);
 
-    return db;
+      return db;
+    } catch (error) {
+      console.error("Failed to initialize SQLite database:", error);
+      this.isStub = true;
+      return null;
+    }
   }
 
   async getUserByEmail(email) {
-    const db = await this.dbPromise;
-    return db.get('SELECT * FROM users WHERE email = ?', [email]);
+    if (this.isStub) return null;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return null;
+      
+      return db.get('SELECT * FROM users WHERE email = ?', [email]);
+    } catch (error) {
+      console.error("getUserByEmail error:", error);
+      return null;
+    }
   }
 
   async getUserById(id) {
-    const db = await this.dbPromise;
-    return db.get('SELECT * FROM users WHERE id = ?', [id]);
+    if (this.isStub) return null;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return null;
+      
+      return db.get('SELECT * FROM users WHERE id = ?', [id]);
+    } catch (error) {
+      console.error("getUserById error:", error);
+      return null;
+    }
   }
 
   async createUser({ email, password, name }) {
-    const db = await this.dbPromise;
-    const result = await db.run(
-      'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
-      [email, password, name]
-    );
-    return result.lastID;
+    if (this.isStub) throw new Error("SqliteStorage not available");
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) throw new Error("Database not initialized");
+      
+      const result = await db.run(
+        'INSERT INTO users (email, password, name) VALUES (?, ?, ?)',
+        [email, password, name]
+      );
+      return result.lastID;
+    } catch (error) {
+      console.error("createUser error:", error);
+      throw error;
+    }
   }
 
   async storeRefreshToken(userId, token) {
-    const db = await this.dbPromise;
-    await db.run(
-      'INSERT INTO refresh_tokens (userId, token) VALUES (?, ?)',
-      [userId, token]
-    );
-    return true;
+    if (this.isStub) return false;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return false;
+      
+      await db.run(
+        'INSERT INTO refresh_tokens (userId, token) VALUES (?, ?)',
+        [userId, token]
+      );
+      return true;
+    } catch (error) {
+      console.error("storeRefreshToken error:", error);
+      return false;
+    }
   }
 
   async getRefreshToken(userId, token) {
-    const db = await this.dbPromise;
-    return db.get(
-      'SELECT * FROM refresh_tokens WHERE userId = ? AND token = ?',
-      [userId, token]
-    );
+    if (this.isStub) return null;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return null;
+      
+      return db.get(
+        'SELECT * FROM refresh_tokens WHERE userId = ? AND token = ?',
+        [userId, token]
+      );
+    } catch (error) {
+      console.error("getRefreshToken error:", error);
+      return null;
+    }
   }
 
   async removeRefreshToken(userId, token) {
-    const db = await this.dbPromise;
-    await db.run(
-      'DELETE FROM refresh_tokens WHERE userId = ? AND token = ?',
-      [userId, token]
-    );
-    return true;
+    if (this.isStub) return false;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return false;
+      
+      await db.run(
+        'DELETE FROM refresh_tokens WHERE userId = ? AND token = ?',
+        [userId, token]
+      );
+      return true;
+    } catch (error) {
+      console.error("removeRefreshToken error:", error);
+      return false;
+    }
   }
 
-  // Just minimal implementations for the journal methods
+  // Minimal journal methods
   async createJournalEntry(userId, content, mood) {
-    const db = await this.dbPromise;
-    const created = new Date().toISOString();
-    const result = await db.run(
-      'INSERT INTO journals (userId, content, created, mood) VALUES (?, ?, ?, ?)',
-      [userId, content, created, mood]
-    );
-    return result.lastID;
+    if (this.isStub) throw new Error("SqliteStorage not available");
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) throw new Error("Database not initialized");
+      
+      const created = new Date().toISOString();
+      const result = await db.run(
+        'INSERT INTO journals (userId, content, created, mood) VALUES (?, ?, ?, ?)',
+        [userId, content, created, mood]
+      );
+      return result.lastID;
+    } catch (error) {
+      console.error("createJournalEntry error:", error);
+      throw error;
+    }
   }
 
   async getJournalEntries(userId) {
-    const db = await this.dbPromise;
-    return db.all(
-      'SELECT * FROM journals WHERE userId = ? ORDER BY created DESC',
-      [userId]
-    );
+    if (this.isStub) return [];
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return [];
+      
+      return db.all(
+        'SELECT * FROM journals WHERE userId = ? ORDER BY created DESC',
+        [userId]
+      );
+    } catch (error) {
+      console.error("getJournalEntries error:", error);
+      return [];
+    }
   }
 
   async getJournalEntry(id, userId) {
-    const db = await this.dbPromise;
-    return db.get(
-      'SELECT * FROM journals WHERE id = ? AND userId = ?',
-      [id, userId]
-    );
+    if (this.isStub) return null;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return null;
+      
+      return db.get(
+        'SELECT * FROM journals WHERE id = ? AND userId = ?',
+        [id, userId]
+      );
+    } catch (error) {
+      console.error("getJournalEntry error:", error);
+      return null;
+    }
   }
 
   async updateJournalEntry(id, userId, content, mood) {
-    const db = await this.dbPromise;
-    await db.run(
-      'UPDATE journals SET content = ?, mood = ? WHERE id = ? AND userId = ?',
-      [content, mood, id, userId]
-    );
-    return true;
+    if (this.isStub) return false;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return false;
+      
+      await db.run(
+        'UPDATE journals SET content = ?, mood = ? WHERE id = ? AND userId = ?',
+        [content, mood, id, userId]
+      );
+      return true;
+    } catch (error) {
+      console.error("updateJournalEntry error:", error);
+      return false;
+    }
   }
 
   async deleteJournalEntry(id, userId) {
-    const db = await this.dbPromise;
-    await db.run(
-      'DELETE FROM journals WHERE id = ? AND userId = ?',
-      [id, userId]
-    );
-    return true;
+    if (this.isStub) return false;
+    
+    try {
+      const db = await this.dbPromise;
+      if (!db) return false;
+      
+      await db.run(
+        'DELETE FROM journals WHERE id = ? AND userId = ?',
+        [id, userId]
+      );
+      return true;
+    } catch (error) {
+      console.error("deleteJournalEntry error:", error);
+      return false;
+    }
   }
 }
 EOF
@@ -688,6 +814,10 @@ cat > dist/package.json << 'EOF'
     "bcrypt": "^5.1.0",
     "drizzle-orm": "^0.25.0",
     "@neondatabase/serverless": "^0.4.0"
+  },
+  "optionalDependencies": {
+    "sqlite": "^4.1.2",
+    "sqlite3": "^5.1.6"
   }
 }
 EOF

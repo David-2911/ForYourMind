@@ -2,6 +2,15 @@
 
 This guide provides instructions for deploying the MindfulMe application to Render.com using the emergency build scripts that handle ESM compatibility.
 
+## Latest Fix: SQLite Import Error
+
+The latest deployment error was related to missing SQLite packages on Render. This has been fixed with:
+
+1. Making SQLite imports conditional with dynamic imports and error handling
+2. Updating storage.js to always use PostgreSQL in production 
+3. Adding proper error handling for all database operations
+4. Adding SQLite packages as optional dependencies
+
 ## Setup on Render.com
 
 1. Create a new Web Service on Render
@@ -48,7 +57,17 @@ Make sure your PostgreSQL database has the following tables:
 2. `journals` - For journal entries
 3. `refresh_tokens` - For authentication
 
-You can use the migrations in the `migrations` folder to set up your database schema:
+You can use the included emergency schema script to set up your database tables:
+
+```bash
+# Set your DATABASE_URL environment variable
+export DATABASE_URL=postgres://username:password@host:port/database
+
+# Run the script
+./apply-postgres-emergency.sh
+```
+
+Or you can manually run these SQL commands:
 
 ```sql
 -- users table

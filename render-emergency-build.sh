@@ -14,6 +14,10 @@ rm -rf .vite
 echo "📦 Installing dependencies..."
 npm install --include=dev
 
+# Install optional dependencies explicitly for safety
+echo "📦 Installing optional database dependencies..."
+npm install --no-save sqlite sqlite3 drizzle-orm @neondatabase/serverless
+
 # Build frontend
 echo "🏗️ Building frontend..."
 npx vite build
