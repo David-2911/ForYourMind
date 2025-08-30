@@ -11,6 +11,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Trust proxy so secure cookies and protocol detection work behind proxies (Render/Netlify/etc.)
+// This is required when setting cookies with secure:true and sameSite:'none'.
+app.set('trust proxy', 1);
+
 // Enable CORS with more flexible configuration for production
 const isDev = process.env.NODE_ENV !== 'production';
 const corsOptions = {
@@ -86,6 +90,7 @@ app.use((req, res, next) => {
   } else {
     // In production, use the static-server module
     try {
+  // @ts-expect-error dynamic import path is valid at runtime; ignore type resolution here
   const { serveStatic } = await import("./static-server");
       serveStatic(app);
       console.log("Static server initialized successfully");

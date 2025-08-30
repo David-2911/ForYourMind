@@ -20,6 +20,13 @@ export async function initializeDatabase() {
     return;
   }
 
+  // Only initialize Neon HTTP driver when the URL clearly targets Neon, or explicitly requested.
+  const useNeon = process.env.USE_NEON === 'true' || /neon/i.test(databaseUrl);
+  if (!useNeon) {
+    console.log("Non-Neon DATABASE_URL detected — skipping Neon HTTP initialization");
+    return;
+  }
+
   try {
     const sql = neon(databaseUrl);
     db = drizzle(sql, { schema });

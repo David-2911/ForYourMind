@@ -1,6 +1,21 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { authService } from "./auth";
 
+// Build full API URL from a path. Allows deploying frontend and backend separately.
+const RAW_API_BASE = (import.meta as any)?.env?.VITE_API_BASE_URL || (import.meta as any)?.env?.VITE_API_URL || "";
+const API_BASE = typeof RAW_API_BASE === 'string' ? RAW_API_BASE.replace(/\/$/, '') : "";
+
+function buildUrl(path: string): string {
+  // path should start with '/'
+  if (!API_BASE) return path;
+  if (/^https?:/i.test(path)) return path; // already absolute
+  // Avoid double '/api' if API_BASE already ends with '/api' and path starts with '/api'
+  if (API_BASE.endsWith('/api') && path.startsWith('/api')) {
+    return API_BASE + path.replace(/^\/api/, '');
+  }
+  return API_BASE + path;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -13,12 +28,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<any> {
-  const API_BASE = "/api";
   const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
   const token = authService.getToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${url}`, {
+  const res = await fetch(buildUrl(url), {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -30,9 +44,9 @@ export async function apiRequest(
     try {
       const refreshed = await authService.refresh();
       if (refreshed) {
-        const token = authService.getToken();
+  const token = authService.getToken();
         if (token) headers["Authorization"] = `Bearer ${token}`;
-        const retried = await fetch(url, { method, headers, body: data ? JSON.stringify(data) : undefined, credentials: "include" });
+  const retried = await fetch(buildUrl(url), { method, headers, body: data ? JSON.stringify(data) : undefined, credentials: "include" });
         await throwIfResNotOk(retried);
         const text2 = await retried.text();
         try { return JSON.parse(text2) as any; } catch (e) { return text2 as any; }
@@ -58,7 +72,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const url = queryKey.join("/") as string;
+  const url = buildUrl(queryKey.join("/") as string);
 
   const token = authService.getToken();
   const headers: Record<string, string> = {};

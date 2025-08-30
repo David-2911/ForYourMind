@@ -105,21 +105,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
       // create refresh token and set as httpOnly cookie
       const refreshToken = await storage.createRefreshToken(user.id);
-      res.cookie('refresh_token', refreshToken, { 
-        httpOnly: true, 
-        secure: app.get('env') !== 'development', 
-        sameSite: 'lax', 
-        maxAge: 7 * 24 * 60 * 60 * 1000 
+      const isProd = app.get('env') !== 'development';
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       res.json({
         user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role },
         token
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid user data", details: error.errors });
+      const err = error as any;
+      if (err && err.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid user data", details: err.errors });
       }
       res.status(500).json({ message: "Registration failed", error: "An unexpected error occurred" });
     }
@@ -153,7 +156,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
   const refreshToken = await storage.createRefreshToken(user.id);
-      res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: app.get('env') !== 'development', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      const isProd = app.get('env') !== 'development';
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       res.json({ user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role }, token });
     } catch (error) {
@@ -176,7 +186,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Rotate refresh token
       await storage.deleteRefreshToken(refreshToken);
       const newRefreshToken = await storage.createRefreshToken(userId);
-      res.cookie('refresh_token', newRefreshToken, { httpOnly: true, secure: app.get('env') !== 'development', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      const isProd = app.get('env') !== 'development';
+      res.cookie('refresh_token', newRefreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
   const accessToken = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
       res.json({ token: accessToken, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
@@ -192,7 +209,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (refreshToken) {
         await storage.deleteRefreshToken(refreshToken);
       }
-      res.clearCookie('refresh_token');
+      const isProd = app.get('env') !== 'development';
+      res.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        path: '/',
+      });
       res.json({ message: 'Logged out' });
     } catch (error) {
       res.status(500).json({ message: 'Logout failed', error });

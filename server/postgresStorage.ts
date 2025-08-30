@@ -13,7 +13,13 @@ export class PostgresStorage implements IStorage {
     if (!connectionString) {
       throw new Error('DATABASE_URL is required for PostgreSQL storage');
     }
-    this.client = new Client({ connectionString });
+    // Enable TLS when connecting to managed providers (Neon/Supabase/etc.)
+    const forceSSL = process.env.PGSSL === 'true';
+    const needsSSL = forceSSL || /sslmode=require|neon|supabase|render|heroku|aws/i.test(connectionString);
+    this.client = new Client({
+      connectionString,
+      ...(needsSSL ? { ssl: { rejectUnauthorized: false } } : {}),
+    });
     this.connect();
   }
   
