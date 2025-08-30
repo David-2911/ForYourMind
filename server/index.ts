@@ -84,16 +84,14 @@ app.use((req, res, next) => {
     const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
-    // Serve static files in production without requiring vite
-    app.use(express.static(path.join(__dirname, '../public')));
-    
-    // Catch-all route to serve index.html for client-side routing
-    app.get('*', (req, res, next) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/')) return next();
-      
-      res.sendFile(path.join(__dirname, '../public/index.html'));
-    });
+    // In production, use the static-server module
+    try {
+      const { serveStatic } = await import("./static-server");
+      serveStatic(app);
+      console.log("Static server initialized successfully");
+    } catch (error) {
+      console.error("Error setting up static server:", error);
+    }
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
