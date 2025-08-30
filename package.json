@@ -9,7 +9,7 @@
     "build:vercel": "bash ./vercel-build.sh",
     "build:frontend": "bash ./render-frontend-build.sh",
     "build:frontend:fixed": "./render-frontend-fixed.sh",
-    "build:backend": "tsc",          
+    "build:backend": "tsc -p tsconfig.server.json",
     "build:render": "./render-build.sh",
     "build:failsafe": "./render-failsafe-build.sh",
     "build:emergency": "./render-emergency-build.sh",
