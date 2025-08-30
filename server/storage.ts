@@ -2,8 +2,8 @@
 import { type User, type InsertUser, type Journal, type InsertJournal, type AnonymousRant, type InsertAnonymousRant, type MoodEntry, type InsertMoodEntry, type Therapist, type Course, type Organization, type Employee, type Appointment, type InsertAppointment } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
-import SqliteStorage from "./sqliteStorage";
-import PostgresStorage from "./postgresStorage";
+import { SqliteStorage } from "./sqliteStorage";
+import { PostgresStorage } from "./postgresStorage";
 
 export interface IStorage {
   // User management
@@ -610,7 +610,7 @@ let storage: IStorage;
 
 if (useSqlite) {
   console.log("Using SQLite storage");
-  storage = new (SqliteStorage as any)(process.env.SQLITE_DB_PATH || './data/db.sqlite');
+  storage = new SqliteStorage(process.env.SQLITE_DB_PATH || './data/db.sqlite');
 } else if (usePostgres) {
   console.log("Using PostgreSQL storage");
   storage = new PostgresStorage(process.env.DATABASE_URL);

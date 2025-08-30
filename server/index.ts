@@ -4,7 +4,7 @@ import cors from "cors";
 import { registerRoutes } from "./routes";
 import { log } from "./vite"; // Only import log
 import { initializeDatabase } from "./database";
-import path from "path";
+// no path import needed here; static serving resolves internally
 
 export const app = express();
 app.use(express.json());
@@ -86,7 +86,7 @@ app.use((req, res, next) => {
   } else {
     // In production, use the static-server module
     try {
-      const { serveStatic } = await import("./static-server");
+  const { serveStatic } = await import("./static-server");
       serveStatic(app);
       console.log("Static server initialized successfully");
     } catch (error) {

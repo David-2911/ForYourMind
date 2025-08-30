@@ -1,5 +1,7 @@
 // @ts-nocheck
 import Database from 'better-sqlite3';
+import fs from 'fs';
+import path from 'path';
 import bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import type { User, InsertUser, Journal, InsertJournal, AnonymousRant, InsertAnonymousRant, MoodEntry, InsertMoodEntry, Therapist, Course, Organization, Employee, Appointment, InsertAppointment } from '@shared/schema';
@@ -8,6 +10,15 @@ export class SqliteStorage {
   private db: any;
 
   constructor(dbPath: string = './data/db.sqlite') {
+    // Ensure parent directory exists (Render ephemeral FS still allows runtime writes)
+    try {
+      const dir = path.dirname(dbPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    } catch (e) {
+      console.warn('Could not ensure SQLite data directory exists:', e);
+    }
     this.db = new Database(dbPath);
     this.migrate();
     // Seed demo data if DB is empty
