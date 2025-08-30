@@ -7,7 +7,7 @@
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
     "build:vercel": "bash ./vercel-build.sh",
-    "build:frontend": "vite build",
+    "build:frontend": "bash ./render-frontend-build.sh",
     "build:frontend:fixed": "./render-frontend-fixed.sh",
     "build:backend": "tsc",
     "build:render": "./render-build.sh",
