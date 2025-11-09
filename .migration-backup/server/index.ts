@@ -90,7 +90,8 @@ app.use((req, res, next) => {
   } else {
     // In production, use the static-server module
     try {
-      const { serveStatic } = await import("./static-server");
+  // @ts-expect-error dynamic import path is valid at runtime; ignore type resolution here
+  const { serveStatic } = await import("./static-server");
       serveStatic(app);
       console.log("Static server initialized successfully");
     } catch (error) {
