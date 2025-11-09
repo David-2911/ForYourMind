@@ -4,3 +4,39 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+
+# Logs
+*.log
+*.pid
+
+# Temporary files
+*.tmp
+cookies*.txt
+login*.json
+logout*.json
+refresh*.json
+profile_sqlite.json
+temp_*.tsx
+
+# Database files
+data/*.sqlite
+data/*.bak
+
+# Build artifacts
+dist/
+
+dist/
+*.log
+*.pid
+*.tmp
+cookies*.txt
+login*.json
+logout*.json
+refresh*.json
+profile_sqlite.json
+temp_*.tsx
+data/*.sqlite
+data/*.bak
+.local/
+fymenv/
