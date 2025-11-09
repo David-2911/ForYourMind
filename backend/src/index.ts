@@ -1,107 +1,41 @@
-import express, { type Request, Response, NextFunction } from "express";
-import cookieParser from "cookie-parser";
+import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import { config } from "dotenv";
 import { registerRoutes } from "./routes/index.js";
-import { initializeDatabase } from "./database.js";
+
+// Load environment variables
+config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  credentials: true,
+}));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Trust proxy for secure cookies behind proxies
-app.set('trust proxy', 1);
-
-// CORS Configuration
-const isDev = process.env.NODE_ENV !== 'production';
-const corsOptions = {
-  origin: isDev 
-    ? 'http://localhost:5173' 
-    : [
-        process.env.CORS_ORIGIN || 'https://mindfulme-web.onrender.com', 
-        'https://mindfulme-api.onrender.com'
-      ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-app.use(cors(corsOptions));
-
-// Request logging
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-      console.log(logLine);
-    }
-  });
-
-  next();
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Health check endpoint
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Initialize and start server
+// API Routes - registerRoutes is async and returns HTTP server
 (async () => {
   try {
-    // Initialize database connection
-    await initializeDatabase();
-    console.log('✅ Database initialized');
-    
-    // Register API routes
     const server = await registerRoutes(app);
-    console.log('✅ Routes registered');
-
-    // Global error handler
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ 
-        message,
-        error: app.get("env") === "development" ? err.stack : undefined
-      });
-      
-      console.error("Server error:", err);
-    });
-
-    // Start server
-    const port = parseInt(process.env.PORT || '5000', 10);
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      console.log(`🚀 Backend server running on http://0.0.0.0:${port}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🗄️  Database: ${process.env.USE_SQLITE ? 'SQLite' : 'PostgreSQL'}`);
+    
+    // Start the server
+    server.listen(PORT, () => {
+      console.log(`✅ Backend server running on http://localhost:${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🗄️  Database: ${process.env.USE_SQLITE ? "SQLite" : "PostgreSQL"}`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error("❌ Failed to start server:", error);
     process.exit(1);
   }
 })();

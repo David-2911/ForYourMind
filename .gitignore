@@ -40,3 +40,22 @@ data/*.sqlite
 data/*.bak
 .local/
 fymenv/
+# Backend
+backend/dist/
+backend/node_modules/
+backend/.env
+backend/data/*.sqlite
+backend/data/*.sqlite-*
+
+# Build artifacts
+dist/
+*.log
+*.pid
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+
+# Keep existing backend ignores...

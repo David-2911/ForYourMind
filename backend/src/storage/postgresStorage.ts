@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { type User, type InsertUser, type Journal, type InsertJournal, type AnonymousRant, type InsertAnonymousRant, type MoodEntry, type InsertMoodEntry, type Therapist, type Course, type Organization, type Employee, type Appointment, type InsertAppointment } from "../../../shared/schema";
+import { type User, type InsertUser, type Journal, type InsertJournal, type AnonymousRant, type InsertAnonymousRant, type MoodEntry, type InsertMoodEntry, type Therapist, type Course, type Organization, type Employee, type Appointment, type InsertAppointment } from "../../../shared/schema.js";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import { Client } from 'pg';
-import { IStorage } from "./storage";
+import { IStorage } from "./index.js";
 
 export class PostgresStorage implements IStorage {
   private client: Client;
