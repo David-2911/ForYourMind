@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import type { User, InsertUser, Journal, InsertJournal, AnonymousRant, InsertAnonymousRant, MoodEntry, InsertMoodEntry, Therapist, Course, Organization, Employee, Appointment, InsertAppointment } from '../../../shared/schema';
+import type { User, InsertUser, Journal, InsertJournal, AnonymousRant, InsertAnonymousRant, MoodEntry, InsertMoodEntry, Therapist, Course, Organization, Employee, Appointment, InsertAppointment } from '@mindfulme/shared';
 
 export class SqliteStorage {
   private db: any;

@@ -1,0 +1,171 @@
+# ====================================
+# Render.com Blueprint
+# ====================================
+# This file defines all services for deployment on Render.com
+# Place this file at the root of your repository
+
+services:
+  # ============================================================
+  # Backend API Service
+  # ============================================================
+  - type: web
+    name: mindfulme-backend
+    runtime: node
+    region: oregon # or your preferred region: oregon, frankfurt, singapore
+    plan: free # free, starter, standard, pro
+    branch: main # or your production branch
+    buildCommand: npm install && npm run build:shared && npm run build -w backend
+    startCommand: npm run start:prod -w backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mindfulme-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Auto-generates secure random value
+        sync: false # Don't sync across services
+      - key: COOKIE_SECRET
+        generateValue: true
+        sync: false
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL
+        value: 7d
+      - key: CORS_ORIGIN
+        value: https://mindfulme.onrender.com # Update with your frontend URL
+      - key: LOG_LEVEL
+        value: error
+      - key: USE_SQLITE
+        value: false
+      # Optional: Email configuration
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # Optional: Monitoring
+      - key: SENTRY_DSN
+        sync: false
+      - key: ENABLE_PERFORMANCE_MONITORING
+        value: true
+    healthCheckPath: /healthz
+    autoDeploy: true
+    # Custom build settings
+    buildFilter:
+      paths:
+        - backend/**
+        - shared/**
+        - package.json
+    # Scaling (for paid plans)
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 3
+
+  # ============================================================
+  # Frontend Static Site
+  # ============================================================
+  - type: web
+    name: mindfulme-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: npm install && npm run build:shared && npm run build -w frontend
+    staticPublishPath: frontend/dist
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: VITE_API_URL
+        value: https://mindfulme-backend.onrender.com # Update with your backend URL
+      - key: VITE_NODE_ENV
+        value: production
+      - key: VITE_APP_VERSION
+        value: 1.0.0
+      # Optional: Analytics
+      - key: VITE_SENTRY_DSN
+        sync: false
+      - key: VITE_GA_TRACKING_ID
+        sync: false
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-XSS-Protection
+        value: 1; mode=block
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    buildFilter:
+      paths:
+        - frontend/**
+        - shared/**
+        - package.json
+
+# ============================================================
+# Database
+# ============================================================
+databases:
+  - name: mindfulme-postgres
+    region: oregon
+    plan: free # free, starter, standard, pro
+    databaseName: mindfulme_prod
+    user: mindfulme
+    ipAllowList: [] # Empty allows all IPs (use specific IPs for better security)
+    # For paid plans, you can configure backups
+    # postgresMajorVersion: 15
+
+# ============================================================
+# Notes for Configuration
+# ============================================================
+# 
+# 1. ENVIRONMENT VARIABLES:
+#    - Update CORS_ORIGIN with your actual frontend URL
+#    - Update VITE_API_URL with your actual backend URL
+#    - Add SMTP credentials if you need email functionality
+#    - Add Sentry DSN if you want error tracking
+#
+# 2. CUSTOM DOMAINS:
+#    - After deployment, add custom domains in Render dashboard
+#    - Update CORS_ORIGIN and VITE_API_URL accordingly
+#
+# 3. DATABASE MIGRATIONS:
+#    - Migrations run automatically during backend build
+#    - Add to buildCommand: && npm run db:migrate -w backend
+#
+# 4. SCALING:
+#    - Free tier: 1 instance, spins down after inactivity
+#    - Paid tiers: Auto-scaling, always on, more resources
+#
+# 5. MONITORING:
+#    - Use healthCheckPath for automatic health monitoring
+#    - Render will restart service if health check fails
+#    - View logs in Render dashboard
+#
+# 6. SECRETS:
+#    - generateValue: true creates secure random secrets
+#    - sync: false prevents sharing across services
+#    - Manually add sensitive values in Render dashboard
+#
+# 7. BUILD FILTERS:
+#    - Prevents rebuilds when unrelated files change
+#    - Only builds when specified paths are modified
+#
+# ============================================================

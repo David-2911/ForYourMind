@@ -1,7 +1,0 @@
-
-> rest-express@1.0.0 dev
-> NODE_ENV=development tsx server/index.ts
-
-USE_SQLITE detected — skipping Neon initialization
-12:56:42 PM [express] serving on port 5000
-12:57:50 PM [express] POST /api/auth/register 200 in 440ms :: {"user":{"id":"98f97e47-d13a-4926-b07e-…

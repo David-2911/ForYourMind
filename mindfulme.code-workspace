@@ -1,0 +1,437 @@
+{
+  "folders": [
+    {
+      "name": "🏠 MindfulMe (Root)",
+      "path": "."
+    },
+    {
+      "name": "📦 shared",
+      "path": "shared"
+    },
+    {
+      "name": "⚙️  backend",
+      "path": "backend"
+    },
+    {
+      "name": "🎨 frontend",
+      "path": "frontend"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+      "source.organizeImports": false
+    },
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    
+    // TypeScript
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    
+    // File associations
+    "files.associations": {
+      "*.css": "tailwindcss"
+    },
+    
+    // Exclude from search
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.next": true,
+      "**/coverage": true,
+      "**/.turbo": true,
+      "**/data/*.sqlite": true,
+      "**/*.log": true
+    },
+    
+    // File watcher excludes
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/dist/**": true,
+      "**/build/**": true,
+      "**/coverage/**": true,
+      "**/data/*.sqlite": true
+    },
+    
+    // Tailwind CSS
+    "tailwindCSS.includeLanguages": {
+      "typescript": "javascript",
+      "typescriptreact": "javascript"
+    },
+    "tailwindCSS.experimental.classRegex": [
+      ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+    ],
+    
+    // ESLint
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+    "eslint.workingDirectories": [
+      { "pattern": "backend/" },
+      { "pattern": "frontend/" },
+      { "pattern": "shared/" }
+    ],
+    
+    // Git
+    "git.ignoreLimitWarning": true,
+    
+    // Terminal
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "bash",
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    
+    // Prettier
+    "prettier.enable": true,
+    "prettier.singleQuote": false,
+    "prettier.semi": true,
+    "prettier.printWidth": 100,
+    "prettier.trailingComma": "es5",
+    
+    // Path Intellisense
+    "path-intellisense.mappings": {
+      "@": "${workspaceRoot}/frontend/src",
+      "@mindfulme/shared": "${workspaceRoot}/shared/src"
+    },
+    
+    // Auto import
+    "typescript.suggest.autoImports": true,
+    "javascript.suggest.autoImports": true,
+    
+    // IntelliSense
+    "typescript.suggest.completeFunctionCalls": true,
+    "javascript.suggest.completeFunctionCalls": true,
+    
+    // File nesting
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+      "package.json": "package-lock.json, .npmrc, .nvmrc",
+      "tsconfig.json": "tsconfig.*.json",
+      ".env.example": ".env, .env.local, .env.prod, .env.prod.example",
+      "vite.config.ts": "vite.config.*.ts",
+      "docker-compose.yml": "docker-compose.*.yml, Dockerfile, .dockerignore",
+      "README.md": "*.md"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      // Essential
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ms-vscode.vscode-typescript-next",
+      
+      // Tailwind CSS
+      "bradlc.vscode-tailwindcss",
+      
+      // React
+      "dsznajder.es7-react-js-snippets",
+      
+      // Path Intellisense
+      "christian-kohler.path-intellisense",
+      
+      // Auto Rename Tag
+      "formulahendry.auto-rename-tag",
+      
+      // Import Cost
+      "wix.vscode-import-cost",
+      
+      // Docker
+      "ms-azuretools.vscode-docker",
+      
+      // Database
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "alexcvzz.vscode-sqlite",
+      
+      // Git
+      "eamodio.gitlens",
+      "mhutchie.git-graph",
+      
+      // Markdown
+      "yzhang.markdown-all-in-one",
+      "davidanson.vscode-markdownlint",
+      
+      // REST Client
+      "humao.rest-client",
+      
+      // Error Lens
+      "usernamehw.errorlens",
+      
+      // TODO Highlight
+      "wayou.vscode-todo-highlight",
+      
+      // Better Comments
+      "aaron-bond.better-comments",
+      
+      // Indent Rainbow
+      "oderwat.indent-rainbow"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🚀 Debug Backend",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/backend",
+        "skipFiles": ["<node_internals>/**"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "env": {
+          "NODE_ENV": "development"
+        }
+      },
+      {
+        "type": "chrome",
+        "request": "launch",
+        "name": "🎨 Debug Frontend (Chrome)",
+        "url": "http://localhost:5173",
+        "webRoot": "${workspaceFolder}/frontend/src",
+        "sourceMaps": true,
+        "sourceMapPathOverrides": {
+          "webpack:///src/*": "${webRoot}/*"
+        }
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🧪 Run Backend Tests",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "test"],
+        "cwd": "${workspaceFolder}/backend",
+        "skipFiles": ["<node_internals>/**"],
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "🧪 Run Frontend Tests",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "test"],
+        "cwd": "${workspaceFolder}/frontend",
+        "skipFiles": ["<node_internals>/**"],
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "🎯 Debug Full Stack",
+        "configurations": [
+          "🚀 Debug Backend",
+          "🎨 Debug Frontend (Chrome)"
+        ],
+        "preLaunchTask": "Start All Services",
+        "stopAll": true
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Build Shared",
+        "type": "npm",
+        "script": "build:shared",
+        "path": "./",
+        "group": {
+          "kind": "build",
+          "isDefault": false
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared",
+          "clear": true
+        },
+        "problemMatcher": ["$tsc"]
+      },
+      {
+        "label": "Build All",
+        "type": "npm",
+        "script": "build",
+        "path": "./",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "dependsOn": ["Build Shared"],
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared",
+          "clear": true
+        },
+        "problemMatcher": ["$tsc"]
+      },
+      {
+        "label": "Start Backend",
+        "type": "npm",
+        "script": "dev",
+        "path": "backend",
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated",
+          "group": "servers"
+        },
+        "problemMatcher": {
+          "pattern": {
+            "regexp": "^Error: (.*)$",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*starting.*$",
+            "endsPattern": "^.*Backend server running.*$"
+          }
+        }
+      },
+      {
+        "label": "Start Frontend",
+        "type": "npm",
+        "script": "dev",
+        "path": "frontend",
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated",
+          "group": "servers"
+        },
+        "problemMatcher": {
+          "pattern": {
+            "regexp": "^Error: (.*)$",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*VITE.*$",
+            "endsPattern": "^.*ready in.*$"
+          }
+        }
+      },
+      {
+        "label": "Start All Services",
+        "dependsOn": ["Start Backend", "Start Frontend"],
+        "dependsOrder": "parallel",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Type Check All",
+        "type": "npm",
+        "script": "check",
+        "path": "./",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": ["$tsc"]
+      },
+      {
+        "label": "Run Tests",
+        "type": "npm",
+        "script": "test",
+        "path": "./",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Database Migrations",
+        "type": "npm",
+        "script": "db:migrate",
+        "path": "./",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Open Drizzle Studio",
+        "type": "npm",
+        "script": "db:studio",
+        "path": "./",
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Clean All",
+        "type": "npm",
+        "script": "clean",
+        "path": "./",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Docker Build",
+        "type": "shell",
+        "command": "./scripts/docker-build.sh",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Analyze Bundle",
+        "type": "shell",
+        "command": "./scripts/analyze-bundle.sh",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Health Check",
+        "type": "shell",
+        "command": "./scripts/health-check.sh",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
+}

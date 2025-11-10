@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "../storage/index.js";
-import { insertUserSchema, insertJournalSchema, insertAnonymousRantSchema, insertMoodEntrySchema, insertAppointmentSchema, insertWellnessAssessmentSchema, insertAssessmentResponseSchema } from "../../../shared/schema.js";
+import { insertUserSchema, insertJournalSchema, insertAnonymousRantSchema, insertMoodEntrySchema, insertAppointmentSchema, insertWellnessAssessmentSchema, insertAssessmentResponseSchema } from "@mindfulme/shared/schema";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 

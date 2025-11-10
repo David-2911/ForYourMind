@@ -23,7 +23,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { MoodEntry, Journal } from "../../../shared/schema";
+import { MoodEntry, Journal } from "@mindfulme/shared";
 import ChatbotWidget from "@/components/chatbot/chatbot-widget";
 
 type ActiveSection =

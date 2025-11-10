@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { type User, type InsertUser, type Journal, type InsertJournal, type AnonymousRant, type InsertAnonymousRant, type MoodEntry, type InsertMoodEntry, type Therapist, type Course, type Organization, type Employee, type Appointment, type InsertAppointment } from "../../../shared/schema.js";
+import { type User, type InsertUser, type Journal, type InsertJournal, type AnonymousRant, type InsertAnonymousRant, type MoodEntry, type InsertMoodEntry, type Therapist, type Course, type Organization, type Employee, type Appointment, type InsertAppointment } from "@mindfulme/shared";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import { SqliteStorage } from "./sqliteStorage.js";

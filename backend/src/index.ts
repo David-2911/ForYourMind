@@ -18,9 +18,27 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check
+// Health check endpoint (detailed for monitoring)
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development",
+    database: process.env.USE_SQLITE === "true" ? "SQLite" : "PostgreSQL",
+    version: "1.0.0",
+  });
+});
+
+// Simple liveness probe (for container orchestration)
+app.get("/healthz", (req, res) => {
+  res.status(200).send("OK");
+});
+
+// Readiness probe (checks if app is ready to serve traffic)
+app.get("/ready", (req, res) => {
+  // Add more checks here (database connection, etc.)
+  res.status(200).json({ ready: true });
 });
 
 // API Routes - registerRoutes is async and returns HTTP server

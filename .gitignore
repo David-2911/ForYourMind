@@ -1,61 +1,172 @@
-node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+# ================================
+# MindfulMe Monorepo .gitignore
+# ================================
 
+# ======================
+# NODE & NPM
+# ======================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Logs
-*.log
-*.pid
+# ======================
+# ENVIRONMENT VARIABLES
+# ======================
+.env
+.env.local
+.env.development
+.env.production
+.env.prod
+.env.test
+*.env
 
-# Temporary files
-*.tmp
-cookies*.txt
-login*.json
-logout*.json
-refresh*.json
-profile_sqlite.json
-temp_*.tsx
+# Keep example files
+!.env.example
+!.env.prod.example
 
-# Database files
-data/*.sqlite
-data/*.bak
-
-# Build artifacts
+# ======================
+# BUILD OUTPUTS
+# ======================
 dist/
+build/
+out/
+.next/
+*.tsbuildinfo
 
-dist/
-*.log
-*.pid
-*.tmp
-cookies*.txt
-login*.json
-logout*.json
-refresh*.json
-profile_sqlite.json
-temp_*.tsx
-data/*.sqlite
-data/*.bak
-.local/
-fymenv/
-# Backend
+# ======================
+# TYPESCRIPT
+# ======================
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ======================
+# SHARED PACKAGE
+# ======================
+shared/dist/
+shared/node_modules/
+shared/*.tsbuildinfo
+
+# ======================
+# BACKEND
+# ======================
 backend/dist/
 backend/node_modules/
 backend/.env
+backend/*.tsbuildinfo
+
+# Database files
 backend/data/*.sqlite
 backend/data/*.sqlite-*
+backend/data/*.bak
+data/*.sqlite
+data/*.bak
 
-# Build artifacts
-dist/
-*.log
-*.pid
-
-# Frontend
+# ======================
+# FRONTEND
+# ======================
 frontend/dist/
 frontend/node_modules/
 frontend/.env
 frontend/.env.local
+frontend/*.tsbuildinfo
 
-# Keep existing backend ignores...
+# Vite
+frontend/.vite/
+.vite/
+
+# ======================
+# LEGACY FOLDERS (OLD STRUCTURE) - REMOVED
+# ======================
+# All legacy folders have been cleaned up
+
+# ======================
+# IDE & EDITORS
+# ======================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# ======================
+# OPERATING SYSTEM
+# ======================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ======================
+# LOGS
+# ======================
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ======================
+# TEMPORARY FILES
+# ======================
+*.tmp
+*.temp
+.cache/
+.temp/
+tmp/
+temp/
+
+# Test artifacts
+cookies*.txt
+login*.json
+logout*.json
+refresh*.json
+profile_sqlite.json
+temp_*.tsx
+temp_*.ts
+
+# ======================
+# DOCKER
+# ======================
+.dockerignore
+docker-compose.override.yml
+
+# ======================
+# TESTING
+# ======================
+coverage/
+.nyc_output/
+*.lcov
+
+# ======================
+# MISC
+# ======================
+*.tar.gz
+*.zip
+.local/
+fymenv/
+vite.config.ts.*
+
+# ======================
+# SECURITY
+# ======================
+.pem
+*.key
+*.cert
+secrets/

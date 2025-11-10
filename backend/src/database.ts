@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import * as schema from "../../shared/schema.js";
+import * as schema from "@mindfulme/shared/schema";
 
 // We defer creating a Neon DB connection until runtime so that running with
 // USE_SQLITE or SQLITE_DB_PATH does not attempt to connect to Neon when not
