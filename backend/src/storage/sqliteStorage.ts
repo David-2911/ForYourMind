@@ -210,11 +210,22 @@ export class SqliteStorage {
       values.push(JSON.stringify(updates.preferences));
     }
 
+    // Support password updates (for password change endpoint)
+    if ((updates as any).password !== undefined) {
+      fields.push('password = ?');
+      values.push((updates as any).password);
+      console.log(`[SQLite updateUser] Password field detected, will update password`);
+    }
+
     if (fields.length === 0) return await this.getUser(id);
 
     values.push(id);
     const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
-    this.db.prepare(sql).run(...values);
+    console.log(`[SQLite updateUser] Query: ${sql}`);
+    console.log(`[SQLite updateUser] Values count: ${values.length}, Fields: ${fields.join(', ')}`);
+    
+    const result = this.db.prepare(sql).run(...values);
+    console.log(`[SQLite updateUser] Update result changes: ${result.changes}`);
 
     return await this.getUser(id);
   }
