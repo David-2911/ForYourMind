@@ -854,6 +854,141 @@ export class PostgresStorage implements IStorage {
       return false;
     }
   }
+
+  // Wellness Assessment methods
+  async getWellnessAssessments(userId: string): Promise<any[]> {
+    try {
+      const result = await this.client.query(
+        'SELECT * FROM wellness_assessments WHERE user_id = $1 OR user_id IS NULL ORDER BY created_at DESC',
+        [userId]
+      );
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        assessmentType: row.assessment_type,
+        title: row.title,
+        questions: row.questions || [],
+        isActive: row.is_active,
+        createdAt: row.created_at
+      }));
+    } catch (err) {
+      console.error('Error getting wellness assessments:', err);
+      return [];
+    }
+  }
+
+  async getWellnessAssessment(id: string): Promise<any> {
+    try {
+      const result = await this.client.query(
+        'SELECT * FROM wellness_assessments WHERE id = $1',
+        [id]
+      );
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        assessmentType: row.assessment_type,
+        title: row.title,
+        questions: row.questions || [],
+        isActive: row.is_active,
+        createdAt: row.created_at
+      };
+    } catch (err) {
+      console.error('Error getting wellness assessment:', err);
+      return null;
+    }
+  }
+
+  async createAssessmentResponse(response: any): Promise<any> {
+    const id = randomUUID();
+    
+    try {
+      await this.client.query(
+        `INSERT INTO assessment_responses(id, assessment_id, user_id, responses, total_score, category_scores, recommendations, completed_at)
+         VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          id,
+          response.assessmentId,
+          response.userId,
+          JSON.stringify(response.responses || {}),
+          response.totalScore || 0,
+          JSON.stringify(response.categoryScores || {}),
+          JSON.stringify(response.recommendations || []),
+          new Date()
+        ]
+      );
+      
+      const result = await this.client.query('SELECT * FROM assessment_responses WHERE id = $1', [id]);
+      const row = result.rows[0];
+      
+      return {
+        id: row.id,
+        assessmentId: row.assessment_id,
+        userId: row.user_id,
+        responses: row.responses || {},
+        totalScore: row.total_score,
+        categoryScores: row.category_scores || {},
+        recommendations: row.recommendations || [],
+        completedAt: row.completed_at
+      };
+    } catch (err) {
+      console.error('Error creating assessment response:', err);
+      throw new Error(`Failed to create assessment response: ${err.message}`);
+    }
+  }
+
+  async getUserAssessmentResponses(userId: string): Promise<any[]> {
+    try {
+      const result = await this.client.query(
+        'SELECT * FROM assessment_responses WHERE user_id = $1 ORDER BY completed_at DESC',
+        [userId]
+      );
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        assessmentId: row.assessment_id,
+        userId: row.user_id,
+        responses: row.responses || {},
+        totalScore: row.total_score,
+        categoryScores: row.category_scores || {},
+        recommendations: row.recommendations || [],
+        completedAt: row.completed_at
+      }));
+    } catch (err) {
+      console.error('Error getting user assessment responses:', err);
+      return [];
+    }
+  }
+
+  async getLatestAssessmentResponse(userId: string): Promise<any> {
+    try {
+      const result = await this.client.query(
+        'SELECT * FROM assessment_responses WHERE user_id = $1 ORDER BY completed_at DESC LIMIT 1',
+        [userId]
+      );
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        assessmentId: row.assessment_id,
+        userId: row.user_id,
+        responses: row.responses || {},
+        totalScore: row.total_score,
+        categoryScores: row.category_scores || {},
+        recommendations: row.recommendations || [],
+        completedAt: row.completed_at
+      };
+    } catch (err) {
+      console.error('Error getting latest assessment response:', err);
+      return null;
+    }
+  }
 }
 
 export default PostgresStorage;
