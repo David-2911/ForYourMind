@@ -28,7 +28,7 @@ const authenticateToken = (req: Request, res: Response, next: any) => {
       (req as any).user = user;
       next();
     });
-  } catch (error) {
+  } catch (error: any) {
     return res.status(500).json({ message: "Authentication error" });
   }
 };
@@ -166,8 +166,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       res.json({ user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role }, token });
-    } catch (error) {
-      res.status(500).json({ message: "Login failed", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Login failed", error: error.message });
     }
   });
 
@@ -197,8 +197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const accessToken = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
       res.json({ token: accessToken, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to refresh token', error });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to refresh token', error: error.message });
     }
   });
 
@@ -217,8 +217,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         path: '/',
       });
       res.json({ message: 'Logged out' });
-    } catch (error) {
-      res.status(500).json({ message: 'Logout failed', error });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Logout failed', error: error.message });
     }
   });
 
@@ -240,8 +240,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarUrl: user.avatarUrl,
         preferences: user.preferences
       });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get profile", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get profile", error: error.message });
     }
   });
 
@@ -268,8 +268,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarUrl: updatedUser.avatarUrl,
         preferences: updatedUser.preferences
       });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update profile", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update profile", error: error.message });
     }
   });
 
@@ -321,9 +321,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Password updated successfully",
         requiresReauthentication: true 
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Password Change] Error:', error);
-      res.status(500).json({ message: "Failed to change password", error });
+      res.status(500).json({ message: "Failed to change password", error: error.message });
     }
   });
 
@@ -355,8 +355,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(501).json({ message: "Account deletion not implemented in storage layer" });
       }
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete account", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete account", error: error.message });
     }
   });
 
@@ -368,8 +368,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const journal = await storage.createJournal(journalData);
       res.status(201).json(journal);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create journal", error });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create journal", error: error.message });
     }
   });
 
@@ -378,8 +378,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const journals = await storage.getUserJournals(userId);
       res.json(journals);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get journals", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get journals", error: error.message });
     }
   });
 
@@ -400,8 +400,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(journal);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get journal", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get journal", error: error.message });
     }
   });
 
@@ -418,8 +418,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updated = await storage.updateJournal(id, req.body);
       res.json(updated);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update journal", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update journal", error: error.message });
     }
   });
 
@@ -436,8 +436,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const deleted = await storage.deleteJournal(id);
       res.json({ success: deleted });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete journal", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete journal", error: error.message });
     }
   });
 
@@ -449,8 +449,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const entry = await storage.createMoodEntry(moodData);
       res.status(201).json(entry);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create mood entry", error });
+    } catch (error: any) {
+      console.error('Error creating mood entry:', error.message || error);
+      res.status(400).json({ message: "Failed to create mood entry", error: error.message });
     }
   });
 
@@ -460,8 +461,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const days = parseInt(req.query.days as string) || 30;
       const entries = await storage.getUserMoodEntries(userId, days);
       res.json(entries);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get mood entries", error });
+    } catch (error: any) {
+      console.error('Error getting mood entries:', error.message || error);
+      res.status(500).json({ message: "Failed to get mood entries", error: error.message });
     }
   });
 
@@ -508,8 +510,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalEntries: entries.length,
         daysTracked: days
       });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get mood statistics", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get mood statistics", error: error.message });
     }
   });
 
@@ -524,8 +526,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const rant = await storage.createAnonymousRant(rantData);
       res.status(201).json(rant);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create rant", error });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create rant", error: error.message });
     }
   });
 
@@ -533,8 +535,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const rants = await storage.getAnonymousRants();
       res.json(rants);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get rants", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get rants", error: error.message });
     }
   });
 
@@ -543,8 +545,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const success = await storage.supportAnonymousRant(id);
       res.json({ success });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to support rant", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to support rant", error: error.message });
     }
   });
 
@@ -553,8 +555,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const therapists = await storage.getTherapists();
       res.json(therapists);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get therapists", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get therapists", error: error.message });
     }
   });
 
@@ -568,8 +570,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(therapist);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get therapist", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get therapist", error: error.message });
     }
   });
 
@@ -581,8 +583,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const appointment = await storage.createAppointment(appointmentData);
       res.status(201).json(appointment);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create appointment", error });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create appointment", error: error.message });
     }
   });
 
@@ -591,8 +593,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const appointments = await storage.getUserAppointments(userId);
       res.json(appointments);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get appointments", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get appointments", error: error.message });
     }
   });
 
@@ -613,8 +615,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(appointment);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get appointment", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get appointment", error: error.message });
     }
   });
 
@@ -631,8 +633,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updated = await storage.updateAppointment(id, req.body);
       res.json(updated);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update appointment", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update appointment", error: error.message });
     }
   });
 
@@ -649,8 +651,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const deleted = await storage.deleteAppointment(id);
       res.json({ success: deleted });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete appointment", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete appointment", error: error.message });
     }
   });
 
@@ -659,8 +661,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const courses = await storage.getCourses();
       res.json(courses);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get courses", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get courses", error: error.message });
     }
   });
 
@@ -674,8 +676,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(course);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get course", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get course", error: error.message });
     }
   });
 
@@ -691,8 +693,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const metrics = await storage.getOrganizationWellnessMetrics(orgId);
       res.json(metrics);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get wellness metrics", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get wellness metrics", error: error.message });
     }
   });
 
@@ -709,8 +711,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (!storage.createOrganization) return res.status(500).json({ message: 'Storage backend does not support organization creation' });
   const organization = await storage.createOrganization(name, userId);
       res.status(201).json(organization);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create organization", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create organization", error: error.message });
     }
   });
 
@@ -727,8 +729,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (!storage.addEmployeeToOrg) return res.status(500).json({ message: 'Storage backend does not support adding employees to orgs' });
   const employee = await storage.addEmployeeToOrg(userId, orgId, jobTitle, department);
       res.status(201).json(employee);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to add employee", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to add employee", error: error.message });
     }
   });
 
@@ -743,8 +745,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const employees = await storage.getEmployeesByOrg(orgId);
       res.json(employees);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get employees", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get employees", error: error.message });
     }
   });
 
@@ -758,8 +760,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Survey creation logic would go here
       res.status(201).json({ message: "Survey created successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create survey", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create survey", error: error.message });
     }
   });
 
@@ -772,8 +774,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Course progress tracking logic would go here
       res.json({ message: "Progress updated", courseId: id, progress });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update progress", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update progress", error: error.message });
     }
   });
 
@@ -788,8 +790,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         therapistUpdates: true,
         communityMessages: false
       });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get preferences", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get preferences", error: error.message });
     }
   });
 
@@ -799,8 +801,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const preferences = req.body;
       // Update user notification preferences
       res.json({ message: "Preferences updated", preferences });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update preferences", error });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update preferences", error: error.message });
     }
   });
 
@@ -810,8 +812,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const suggestions = await storage.suggestBuddies(userId, 10);
       res.json(suggestions);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to get buddy suggestions', error });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to get buddy suggestions', error: error.message });
     }
   });
 
@@ -822,8 +824,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!otherUserId) return res.status(400).json({ message: 'otherUserId required' });
       const match = await storage.createBuddyMatch(userId, otherUserId, Math.random());
       res.status(201).json(match);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to create buddy match', error });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to create buddy match', error: error.message });
     }
   });
 
@@ -834,8 +836,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!['pending','accepted','declined'].includes(status)) return res.status(400).json({ message: 'Invalid status' });
       const success = await storage.updateBuddyMatchStatus(id, status);
       res.json({ success });
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to update match status', error });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to update match status', error: error.message });
     }
   });
 
@@ -844,8 +846,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const matches = await storage.getBuddyMatches(userId);
       res.json(matches);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to get matches', error });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to get matches', error: error.message });
     }
   });
 
