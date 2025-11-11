@@ -1,171 +1,392 @@
 # ====================================
-# Render.com Blueprint
+# Render.com Blueprint - MindfulMe Platform
 # ====================================
-# This file defines all services for deployment on Render.com
-# Place this file at the root of your repository
+# Complete production deployment configuration for Render.com
+# This file defines all services, databases, and configurations
+# 
+# DEPLOYMENT URL STRUCTURE:
+# - Backend:  https://mindfulme-backend.onrender.com
+# - Frontend: https://mindfulme-frontend.onrender.com
+# - Database: Internal connection (auto-configured)
+#
+# Before deploying:
+# 1. Update CORS_ORIGIN in backend service (line 45)
+# 2. Update VITE_API_URL in frontend service (line 123)
+# 3. Set secrets in Render dashboard (JWT_SECRET, etc.)
+# 4. Review database migration strategy (line 64)
+# ====================================
 
 services:
   # ============================================================
-  # Backend API Service
+  # BACKEND API SERVICE
   # ============================================================
   - type: web
     name: mindfulme-backend
     runtime: node
-    region: oregon # or your preferred region: oregon, frankfurt, singapore
-    plan: free # free, starter, standard, pro
-    branch: main # or your production branch
-    buildCommand: npm install && npm run build:shared && npm run build -w backend
+    region: oregon # Options: oregon, frankfurt, singapore, ohio, virginia
+    plan: free # Options: free (512MB, sleeps after inactivity), starter ($7/mo, 512MB), standard ($25/mo, 2GB)
+    branch: main # Deploy from this branch
+    
+    # Build Configuration
+    buildCommand: |
+      npm install &&
+      npm run build:shared &&
+      npm run build -w backend &&
+      echo "✅ Backend build complete"
+    
+    # Start Configuration  
     startCommand: npm run start:prod -w backend
+    
+    # Environment Variables
     envVars:
+      # === CORE CONFIGURATION ===
       - key: NODE_ENV
         value: production
+      
       - key: PORT
         value: 5000
+      
+      # === DATABASE ===
       - key: DATABASE_URL
         fromDatabase:
           name: mindfulme-postgres
           property: connectionString
+      
+      - key: USE_SQLITE
+        value: "false"
+      
+      - key: USE_NEON
+        value: "true" # Set to true if using Neon PostgreSQL
+      
+      # === AUTHENTICATION & SECURITY ===
       - key: JWT_SECRET
-        generateValue: true # Auto-generates secure random value
-        sync: false # Don't sync across services
+        generateValue: true # Render auto-generates secure 256-bit secret
+        sync: false
+      
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+        sync: false
+      
+      - key: ACCESS_TOKEN_TTL
+        value: "15m" # 15 minutes
+      
+      - key: REFRESH_TOKEN_TTL
+        value: "7d" # 7 days
+      
       - key: COOKIE_SECRET
         generateValue: true
         sync: false
-      - key: ACCESS_TOKEN_TTL
-        value: 15m
-      - key: REFRESH_TOKEN_TTL
-        value: 7d
+      
+      # === CORS CONFIGURATION ===
       - key: CORS_ORIGIN
-        value: https://mindfulme.onrender.com # Update with your frontend URL
+        value: "https://mindfulme-frontend.onrender.com" # ⚠️ UPDATE THIS with your actual frontend URL
+      
+      # === LOGGING & MONITORING ===
       - key: LOG_LEVEL
-        value: error
-      - key: USE_SQLITE
-        value: false
-      # Optional: Email configuration
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_SECURE
-        value: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
-        sync: false
-      # Optional: Monitoring
-      - key: SENTRY_DSN
-        sync: false
+        value: "error" # Options: debug, info, warn, error
+      
       - key: ENABLE_PERFORMANCE_MONITORING
-        value: true
-    healthCheckPath: /healthz
+        value: "true"
+      
+      # === OPTIONAL: EMAIL CONFIGURATION ===
+      # Uncomment and configure if using email features
+      # - key: SMTP_HOST
+      #   value: smtp.sendgrid.net
+      # - key: SMTP_PORT
+      #   value: "587"
+      # - key: SMTP_SECURE
+      #   value: "false"
+      # - key: SMTP_USER
+      #   sync: false # Set manually in Render dashboard
+      # - key: SMTP_PASS
+      #   sync: false # Set manually in Render dashboard
+      # - key: SMTP_FROM
+      #   value: noreply@mindfulme.com
+      
+      # === OPTIONAL: ERROR TRACKING ===
+      # - key: SENTRY_DSN
+      #   sync: false # Set manually in Render dashboard
+      # - key: SENTRY_ENVIRONMENT
+      #   value: production
+      
+      # === OPTIONAL: RATE LIMITING ===
+      # - key: RATE_LIMIT_WINDOW_MS
+      #   value: "900000" # 15 minutes
+      # - key: RATE_LIMIT_MAX_REQUESTS
+      #   value: "100"
+    
+    # Health Check Configuration
+    healthCheckPath: /health
+    
+    # Auto-deploy on push
     autoDeploy: true
-    # Custom build settings
+    
+    # Build Optimization - Only rebuild when these paths change
     buildFilter:
       paths:
         - backend/**
         - shared/**
         - package.json
-    # Scaling (for paid plans)
+        - package-lock.json
+    
+    # Scaling Configuration (Paid plans only)
+    # Uncomment for auto-scaling on standard/pro plans
     # scaling:
     #   minInstances: 1
     #   maxInstances: 3
+    #   targetMemoryPercent: 70
+    #   targetCPUPercent: 70
 
   # ============================================================
-  # Frontend Static Site
+  # FRONTEND STATIC SITE
   # ============================================================
   - type: web
     name: mindfulme-frontend
     runtime: static
     region: oregon
-    plan: free
+    plan: free # Static sites are always free on Render
     branch: main
-    buildCommand: npm install && npm run build:shared && npm run build -w frontend
+    
+    # Build Configuration
+    buildCommand: |
+      npm install &&
+      npm run build:shared &&
+      npm run build -w frontend &&
+      echo "✅ Frontend build complete" &&
+      echo "📦 Bundle size:" && du -sh frontend/dist
+    
+    # Static site configuration
     staticPublishPath: frontend/dist
+    
+    # Enable preview deployments for pull requests
     pullRequestPreviewsEnabled: true
+    
+    # Environment Variables (available during build)
     envVars:
+      # === API CONFIGURATION ===
       - key: VITE_API_URL
-        value: https://mindfulme-backend.onrender.com # Update with your backend URL
+        value: "https://mindfulme-backend.onrender.com" # ⚠️ UPDATE THIS with your actual backend URL
+      
       - key: VITE_NODE_ENV
         value: production
+      
       - key: VITE_APP_VERSION
-        value: 1.0.0
-      # Optional: Analytics
-      - key: VITE_SENTRY_DSN
-        sync: false
-      - key: VITE_GA_TRACKING_ID
-        sync: false
+        value: "1.0.0"
+      
+      - key: VITE_APP_NAME
+        value: "MindfulMe"
+      
+      # === OPTIONAL: ANALYTICS ===
+      # - key: VITE_GA_TRACKING_ID
+      #   value: G-XXXXXXXXXX
+      # - key: VITE_SENTRY_DSN
+      #   sync: false # Set manually in Render dashboard
+      
+      # === OPTIONAL: FEATURE FLAGS ===
+      # - key: VITE_ENABLE_ANALYTICS
+      #   value: "true"
+      # - key: VITE_ENABLE_ERROR_TRACKING
+      #   value: "true"
+    
+    # Security Headers
     headers:
+      # Prevent clickjacking
       - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN
+      
+      # Prevent MIME type sniffing
       - path: /*
         name: X-Content-Type-Options
         value: nosniff
+      
+      # XSS Protection
       - path: /*
         name: X-XSS-Protection
-        value: 1; mode=block
+        value: "1; mode=block"
+      
+      # Referrer Policy
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      
+      # Content Security Policy (adjust as needed)
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://mindfulme-backend.onrender.com"
+      
+      # Cache static assets for 1 year
+      - path: /assets/*
+        name: Cache-Control
+        value: "public, max-age=31536000, immutable"
+      
+      # Don't cache HTML
+      - path: /index.html
+        name: Cache-Control
+        value: "no-cache, no-store, must-revalidate"
+    
+    # SPA Routing - Redirect all routes to index.html
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
+    
+    # Build Optimization
     buildFilter:
       paths:
         - frontend/**
         - shared/**
         - package.json
+        - package-lock.json
 
 # ============================================================
-# Database
+# DATABASE CONFIGURATION
 # ============================================================
 databases:
   - name: mindfulme-postgres
-    region: oregon
-    plan: free # free, starter, standard, pro
+    region: oregon # Must match backend region for best performance
+    plan: free # Options: free (256MB, 90 days retention), starter ($7/mo, 1GB), standard ($20/mo, 10GB)
     databaseName: mindfulme_prod
     user: mindfulme
-    ipAllowList: [] # Empty allows all IPs (use specific IPs for better security)
-    # For paid plans, you can configure backups
+    
+    # IP Allow List (empty = allow all)
+    # For production, consider restricting to Render IPs only
+    ipAllowList: []
+    
+    # PostgreSQL Version (paid plans only)
     # postgresMajorVersion: 15
+    
+    # Notes:
+    # - Free tier: 256MB storage, 90 days retention, may expire after 90 days of inactivity
+    # - Paid tiers: Daily backups, point-in-time recovery, always on
+    # - Connection string automatically injected into backend as DATABASE_URL
 
 # ============================================================
-# Notes for Configuration
+# DEPLOYMENT NOTES & CHECKLIST
 # ============================================================
-# 
-# 1. ENVIRONMENT VARIABLES:
-#    - Update CORS_ORIGIN with your actual frontend URL
-#    - Update VITE_API_URL with your actual backend URL
-#    - Add SMTP credentials if you need email functionality
-#    - Add Sentry DSN if you want error tracking
 #
-# 2. CUSTOM DOMAINS:
-#    - After deployment, add custom domains in Render dashboard
-#    - Update CORS_ORIGIN and VITE_API_URL accordingly
+# 📋 PRE-DEPLOYMENT CHECKLIST:
+# ================================
 #
-# 3. DATABASE MIGRATIONS:
-#    - Migrations run automatically during backend build
-#    - Add to buildCommand: && npm run db:migrate -w backend
+# ☐ 1. UPDATE URLS:
+#    - Line 45: Update CORS_ORIGIN with actual frontend URL
+#    - Line 123: Update VITE_API_URL with actual backend URL
+#    - Line 201: Update Content-Security-Policy connect-src
 #
-# 4. SCALING:
-#    - Free tier: 1 instance, spins down after inactivity
-#    - Paid tiers: Auto-scaling, always on, more resources
+# ☐ 2. SET SECRETS IN RENDER DASHBOARD:
+#    After initial deployment, verify auto-generated secrets:
+#    - JWT_SECRET (auto-generated)
+#    - JWT_REFRESH_SECRET (auto-generated)
+#    - COOKIE_SECRET (auto-generated)
+#    Optionally add:
+#    - SMTP credentials (if using email)
+#    - Sentry DSN (if using error tracking)
+#    - Analytics keys (if using GA/Mixpanel)
 #
-# 5. MONITORING:
-#    - Use healthCheckPath for automatic health monitoring
-#    - Render will restart service if health check fails
-#    - View logs in Render dashboard
+# ☐ 3. DATABASE MIGRATIONS:
+#    First deployment will auto-create tables via Drizzle ORM
+#    If manual migration needed:
+#    - Connect to database via Render shell
+#    - Run: npm run db:migrate -w backend
 #
-# 6. SECRETS:
-#    - generateValue: true creates secure random secrets
-#    - sync: false prevents sharing across services
-#    - Manually add sensitive values in Render dashboard
+# ☐ 4. CUSTOM DOMAIN (Optional):
+#    - Add custom domain in Render dashboard
+#    - Update CORS_ORIGIN and VITE_API_URL
+#    - SSL certificates auto-provisioned
 #
-# 7. BUILD FILTERS:
-#    - Prevents rebuilds when unrelated files change
-#    - Only builds when specified paths are modified
+# ☐ 5. MONITORING SETUP:
+#    - Enable log tailing: render logs --service=mindfulme-backend
+#    - Set up alerts in Render dashboard
+#    - Configure health check notifications
+#
+# 🚀 DEPLOYMENT WORKFLOW:
+# ================================
+#
+# INITIAL DEPLOYMENT:
+# 1. Push render.yaml to main branch
+# 2. Connect repository to Render
+# 3. Render auto-creates all services from blueprint
+# 4. Backend builds → Runs migrations → Starts server
+# 5. Frontend builds → Deploys static files
+# 6. Database provisions → Connection string injected
+#
+# SUBSEQUENT DEPLOYMENTS:
+# 1. Push code to main branch
+# 2. Auto-deploy triggers (if autoDeploy: true)
+# 3. Only changed services rebuild (via buildFilter)
+# 4. Zero-downtime deployment (paid plans)
+#
+# MANUAL DEPLOYMENT:
+# 1. Go to Render dashboard
+# 2. Select service
+# 3. Click "Manual Deploy" → Select branch/commit
+#
+# 🔄 ROLLBACK PROCEDURE:
+# ================================
+#
+# ROLLBACK APPLICATION:
+# 1. Render Dashboard → Service → "Deploys" tab
+# 2. Find previous successful deployment
+# 3. Click "Redeploy" on previous version
+# 4. Confirm rollback
+#
+# ROLLBACK DATABASE (if migrations failed):
+# 1. Access database shell: render shell --database=mindfulme-postgres
+# 2. Check migration history: SELECT * FROM drizzle_migrations;
+# 3. Manual rollback (if needed - backup first!)
+# 4. Or restore from automatic backup (paid plans)
+#
+# EMERGENCY PROCEDURE:
+# 1. Disable auto-deploy in service settings
+# 2. Rollback to last known good deployment
+# 3. Investigate logs: render logs --service=mindfulme-backend --tail
+# 4. Fix issue in separate branch
+# 5. Test with preview deployment
+# 6. Re-enable auto-deploy after verification
+#
+# 📊 MONITORING & LOGS:
+# ================================
+#
+# VIEW LOGS:
+# - CLI: render logs --service=mindfulme-backend --tail
+# - Dashboard: Service → Logs tab
+# - Filter by severity: info, warn, error
+#
+# HEALTH CHECKS:
+# - Backend: GET https://mindfulme-backend.onrender.com/health
+# - Returns: { status: "ok", environment, database, timestamp }
+# - Render auto-restarts if health check fails 3 times
+#
+# METRICS (Paid plans):
+# - CPU usage
+# - Memory usage  
+# - Request count
+# - Response time
+# - Error rate
+#
+# 🔐 SECURITY NOTES:
+# ================================
+#
+# SECRETS MANAGEMENT:
+# - Never commit secrets to git
+# - Use generateValue: true for auto-generated secrets
+# - Use sync: false to prevent cross-service sharing
+# - Rotate secrets periodically in Render dashboard
+#
+# DATABASE SECURITY:
+# - Use SSL connections (automatic with Neon/Render)
+# - Restrict IP allowlist in production
+# - Enable connection pooling in application
+# - Regular backups (automatic on paid plans)
+#
+# CORS SECURITY:
+# - Update CORS_ORIGIN to exact frontend URL
+# - Never use "*" in production
+# - Include credentials if using cookies
+#
+# RATE LIMITING:
+# - Implement in application code
+# - Use Redis for distributed rate limiting (paid plans)
+# - Configure per-endpoint limits
 #
 # ============================================================
