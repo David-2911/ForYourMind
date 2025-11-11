@@ -93,17 +93,17 @@ app.get("/ready", (req, res) => {
 
     // Handle uncaught exceptions
     process.on("uncaughtException", (error) => {
-      console.error("❌ Uncaught Exception:", error);
+      console.error("❌ Uncaught Exception:", error?.message || String(error));
       process.exit(1);
     });
 
     // Handle unhandled promise rejections
     process.on("unhandledRejection", (reason, promise) => {
-      console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+      console.error("❌ Unhandled Rejection - reason:", typeof reason === 'object' && reason ? (reason as any).message || JSON.stringify(reason) : String(reason));
       process.exit(1);
     });
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
+    console.error("❌ Failed to start server:", error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 })();
