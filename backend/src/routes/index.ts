@@ -119,8 +119,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         token
       });
     } catch (error: unknown) {
-      console.error("Registration error:", error);
       const err = error as any;
+      console.error("Registration error:", err?.message || String(error));
       if (err && err.name === 'ZodError') {
         return res.status(400).json({ message: "Invalid user data", details: err.errors });
       }
@@ -322,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requiresReauthentication: true 
       });
     } catch (error: any) {
-      console.error('[Password Change] Error:', error);
+      console.error('[Password Change] Error:', error?.message || String(error));
       res.status(500).json({ message: "Failed to change password", error: error.message });
     }
   });
