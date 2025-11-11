@@ -32,7 +32,11 @@ services:
       npm install &&
       npm run build:shared &&
       npm run build -w backend &&
-      echo "✅ Backend build complete"
+      echo "✅ Backend build complete" &&
+      echo "📊 Running database migrations..." &&
+      cd backend && npx drizzle-kit push || echo "⚠️ Migration skipped (will retry on startup)" &&
+      cd .. &&
+      echo "✅ Setup complete"
     
     # Start Configuration  
     startCommand: npm run start:prod -w backend
