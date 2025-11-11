@@ -610,16 +610,24 @@ export class MemStorage implements IStorage {
 const useSqlite = !!process.env.USE_SQLITE || !!process.env.SQLITE_DB_PATH;
 const usePostgres = !!process.env.DATABASE_URL && !useSqlite;
 
+// Debug logging to troubleshoot storage selection
+console.log("🔍 Storage Selection Debug:");
+console.log("  - DATABASE_URL present:", !!process.env.DATABASE_URL);
+console.log("  - USE_SQLITE:", process.env.USE_SQLITE);
+console.log("  - SQLITE_DB_PATH:", process.env.SQLITE_DB_PATH);
+console.log("  - useSqlite flag:", useSqlite);
+console.log("  - usePostgres flag:", usePostgres);
+
 let storage: IStorage;
 
 if (useSqlite) {
-  console.log("Using SQLite storage");
+  console.log("✅ Using SQLite storage");
   storage = new SqliteStorage(process.env.SQLITE_DB_PATH || './data/db.sqlite');
 } else if (usePostgres) {
-  console.log("Using PostgreSQL storage");
+  console.log("✅ Using PostgreSQL storage");
   storage = new PostgresStorage(process.env.DATABASE_URL);
 } else {
-  console.log("Using in-memory storage");
+  console.log("✅ Using in-memory storage");
   storage = new MemStorage();
 }
 
