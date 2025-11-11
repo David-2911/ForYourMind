@@ -1,7 +1,8 @@
 import { User, AuthResponse } from "../types";
 
-// Use the environment variable if available, otherwise fall back to relative path
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+// Use the environment variable if available, otherwise fall back to empty string
+// Note: All endpoints will include /api prefix, so this should be just the base URL
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 class AuthService {
   public token: string | null = null;
@@ -43,9 +44,9 @@ class AuthService {
 
   async login(email: string, password: string, organizationCode?: string): Promise<AuthResponse> {
     try {
-      console.log(`Attempting login to ${API_BASE}/auth/login`);
+      console.log(`Attempting login to ${API_BASE}/api/auth/login`);
       
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -79,7 +80,7 @@ class AuthService {
   async refresh(): Promise<AuthResponse | null> {
     try {
       console.log("Attempting token refresh");
-      const response = await fetch(`${API_BASE}/auth/refresh`, {
+      const response = await fetch(`${API_BASE}/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -107,9 +108,9 @@ class AuthService {
     role: "individual" | "manager" | "admin";
   }): Promise<AuthResponse> {
     try {
-      console.log(`Attempting registration to ${API_BASE}/auth/register`);
+      console.log(`Attempting registration to ${API_BASE}/api/auth/register`);
       
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -142,7 +143,7 @@ class AuthService {
 
   logout(): void {
     // inform server to clear refresh cookie, then clear local state and navigate home
-    fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' })
+    fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' })
       .catch(() => {})
       .finally(() => {
         this.token = null;

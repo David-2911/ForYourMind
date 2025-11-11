@@ -105,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
       // create refresh token and set as httpOnly cookie
       const refreshToken = await storage.createRefreshToken(user.id);
-      const isProd = app.get('env') !== 'development';
+      const isProd = process.env.NODE_ENV === 'production';
       res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
         secure: isProd,
@@ -156,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const token = jwt.sign({ userId: user.id, email: user.email, role: user.role } as any, JWT_SECRET as any, { expiresIn: ACCESS_TOKEN_TTL } as any);
   const refreshToken = await storage.createRefreshToken(user.id);
-      const isProd = app.get('env') !== 'development';
+      const isProd = process.env.NODE_ENV === 'production';
       res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
         secure: isProd,
@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Rotate refresh token
       await storage.deleteRefreshToken(refreshToken);
       const newRefreshToken = await storage.createRefreshToken(userId);
-      const isProd = app.get('env') !== 'development';
+      const isProd = process.env.NODE_ENV === 'production';
       res.cookie('refresh_token', newRefreshToken, {
         httpOnly: true,
         secure: isProd,
@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (refreshToken) {
         await storage.deleteRefreshToken(refreshToken);
       }
-      const isProd = app.get('env') !== 'development';
+      const isProd = process.env.NODE_ENV === 'production';
       res.clearCookie('refresh_token', {
         httpOnly: true,
         secure: isProd,
