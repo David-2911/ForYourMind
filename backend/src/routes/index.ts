@@ -304,7 +304,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updateUser(userId, { password: hashedPassword } as any);
 
-      res.json({ message: "Password updated successfully" });
+      // Inform frontend that re-authentication is required
+      // The current JWT token will remain valid until expiry, but we signal
+      // that the user should log in again with their new password
+      res.json({ 
+        message: "Password updated successfully",
+        requiresReauthentication: true 
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to change password", error });
     }

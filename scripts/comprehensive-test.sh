@@ -79,22 +79,20 @@ function make_request() {
     local data=$3
     local token=$4
     
-    local headers=(-H "Content-Type: application/json")
+    local curl_opts=(-s -X "$method")
+    curl_opts+=(-H "Content-Type: application/json")
     
     if [ -n "$token" ]; then
-        headers+=(-H "Authorization: Bearer $token")
+        curl_opts+=(-H "Authorization: Bearer $token")
     fi
     
     if [ -n "$data" ]; then
-        curl -s -X "$method" "${API_URL}${endpoint}" \
-            "${headers[@]}" \
-            -d "$data" \
-            -w "\n%{http_code}"
-    else
-        curl -s -X "$method" "${API_URL}${endpoint}" \
-            "${headers[@]}" \
-            -w "\n%{http_code}"
+        curl_opts+=(-d "$data")
     fi
+    
+    curl_opts+=(-w "\nHTTP_STATUS:%{http_code}")
+    
+    curl "${curl_opts[@]}" "${API_URL}${endpoint}"
 }
 
 # ============================================
@@ -102,9 +100,9 @@ function make_request() {
 # ============================================
 print_test_header "1.0" "API Health Check"
 
-response=$(curl -s "${API_URL}/health" -w "\n%{http_code}")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+response=$(curl -s "${API_URL}/health" -w "\nHTTP_STATUS:%{http_code}")
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     pass_test "API is healthy and responding"
@@ -131,8 +129,8 @@ EOF
 )
 
 response=$(make_request "POST" "/api/auth/register" "$register_data")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
     USER_TOKEN=$(echo "$body" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
@@ -150,8 +148,8 @@ fi
 print_test_header "2.2" "User Registration - Duplicate Email"
 
 response=$(make_request "POST" "/api/auth/register" "$register_data")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "400" ] || [ "$http_code" = "409" ]; then
     if echo "$body" | grep -q -i "exists\|duplicate\|already"; then
@@ -175,8 +173,8 @@ EOF
 )
 
 response=$(make_request "POST" "/api/auth/login" "$login_data")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     token=$(echo "$body" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
@@ -202,7 +200,7 @@ EOF
 )
 
 response=$(make_request "POST" "/api/auth/login" "$invalid_login_data")
-http_code=$(echo "$response" | tail -n1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
 
 if [ "$http_code" = "401" ]; then
     pass_test "Invalid credentials rejected with 401"
@@ -214,7 +212,7 @@ fi
 print_test_header "2.5" "Protected Route Access - No Token"
 
 response=$(make_request "GET" "/api/user/profile")
-http_code=$(echo "$response" | tail -n1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
 
 if [ "$http_code" = "401" ] || [ "$http_code" = "403" ]; then
     pass_test "Protected route rejected request without token"
@@ -226,8 +224,8 @@ fi
 print_test_header "2.6" "Protected Route Access - Valid Token"
 
 response=$(make_request "GET" "/api/user/profile" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     if echo "$body" | grep -q "$TEST_USER_EMAIL"; then
@@ -253,8 +251,8 @@ EOF
 )
 
 response=$(make_request "POST" "/api/mood" "$mood_data" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
     MOOD_ID=$(echo "$body" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
@@ -272,8 +270,8 @@ fi
 print_test_header "3.2" "View Mood History"
 
 response=$(make_request "GET" "/api/mood?days=30" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     if echo "$body" | grep -q "moodScore"; then
@@ -291,8 +289,8 @@ fi
 print_test_header "3.3" "Mood Statistics"
 
 response=$(make_request "GET" "/api/mood/stats?days=30" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     if echo "$body" | grep -q "average"; then
@@ -322,8 +320,8 @@ EOF
 )
 
 response=$(make_request "POST" "/api/journals" "$journal_data" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
     JOURNAL_ID=$(echo "$body" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
@@ -341,8 +339,8 @@ fi
 print_test_header "4.2" "View Journal Entries"
 
 response=$(make_request "GET" "/api/journals" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     if echo "$body" | grep -q "content"; then
@@ -361,8 +359,8 @@ print_test_header "4.3" "Get Single Journal Entry"
 
 if [ -n "$JOURNAL_ID" ]; then
     response=$(make_request "GET" "/api/journals/$JOURNAL_ID" "" "$USER_TOKEN")
-    http_code=$(echo "$response" | tail -n1)
-    body=$(echo "$response" | head -n-1)
+    http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+    body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
     if [ "$http_code" = "200" ]; then
         if echo "$body" | grep -q "$JOURNAL_ID"; then
@@ -391,7 +389,7 @@ EOF
 )
 
     response=$(make_request "PUT" "/api/journals/$JOURNAL_ID" "$update_data" "$USER_TOKEN")
-    http_code=$(echo "$response" | tail -n1)
+    http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
 
     if [ "$http_code" = "200" ]; then
         pass_test "Journal entry updated successfully"
@@ -408,14 +406,14 @@ print_test_header "4.5" "Delete Journal Entry"
 
 if [ -n "$JOURNAL_ID" ]; then
     response=$(make_request "DELETE" "/api/journals/$JOURNAL_ID" "" "$USER_TOKEN")
-    http_code=$(echo "$response" | tail -n1)
+    http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
 
     if [ "$http_code" = "200" ] || [ "$http_code" = "204" ]; then
         pass_test "Journal entry deleted successfully"
         
         # Verify it's really deleted
         response=$(make_request "GET" "/api/journals/$JOURNAL_ID" "" "$USER_TOKEN")
-        http_code=$(echo "$response" | tail -n1)
+        http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
         
         if [ "$http_code" = "404" ]; then
             pass_test "Deleted journal entry no longer accessible"
@@ -443,8 +441,8 @@ EOF
 )
 
 response=$(make_request "POST" "/api/rants" "$rant_data")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
     RANT_ID=$(echo "$body" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
@@ -465,8 +463,8 @@ fi
 print_test_header "5.2" "View Anonymous Rants"
 
 response=$(make_request "GET" "/api/rants")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     if echo "$body" | grep -q "content"; then
@@ -490,7 +488,7 @@ print_test_header "5.3" "Support Anonymous Rant"
 
 if [ -n "$RANT_ID" ]; then
     response=$(make_request "POST" "/api/rants/$RANT_ID/support" "{}")
-    http_code=$(echo "$response" | tail -n1)
+    http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
 
     if [ "$http_code" = "200" ]; then
         pass_test "Rant support recorded successfully"
@@ -508,8 +506,8 @@ fi
 print_test_header "6.1" "Get Wellness Assessments"
 
 response=$(make_request "GET" "/api/wellness-assessments" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     pass_test "Wellness assessments retrieved successfully"
@@ -523,8 +521,8 @@ fi
 print_test_header "6.2" "Get Latest Assessment Response"
 
 response=$(make_request "GET" "/api/wellness-assessments/responses/latest" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     pass_test "Latest assessment response retrieved"
@@ -541,8 +539,8 @@ fi
 print_test_header "7.1" "View Therapist Listings"
 
 response=$(make_request "GET" "/api/therapists" "" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     pass_test "Therapist listings retrieved successfully"
@@ -566,8 +564,8 @@ EOF
 )
 
 response=$(make_request "PUT" "/api/user/profile" "$profile_data" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ]; then
     if echo "$body" | grep -q "Updated Test User"; then
@@ -591,7 +589,7 @@ EOF
 )
 
 response=$(make_request "PATCH" "/api/user/password" "$password_data" "$USER_TOKEN")
-http_code=$(echo "$response" | tail -n1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
 
 if [ "$http_code" = "200" ]; then
     pass_test "Password changed successfully"
@@ -606,7 +604,7 @@ EOF
 )
     
     response=$(make_request "POST" "/api/auth/login" "$new_login_data")
-    http_code=$(echo "$response" | tail -n1)
+    http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
     
     if [ "$http_code" = "200" ]; then
         pass_test "Login successful with new password"
@@ -638,16 +636,16 @@ EOF
 )
 
 response=$(make_request "POST" "/api/auth/register" "$second_user_data")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
     SECOND_USER_TOKEN=$(echo "$body" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
     
     # Try to access first user's profile with second user's token
     response=$(make_request "GET" "/api/user/profile" "" "$SECOND_USER_TOKEN")
-    http_code=$(echo "$response" | tail -n1)
-    body=$(echo "$response" | head -n-1)
+    http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+    body=$(echo "$response" | grep -v "HTTP_STATUS:")
     
     if echo "$body" | grep -q "$SECOND_USER_EMAIL"; then
         pass_test "Users can only access their own profile data"
@@ -675,8 +673,8 @@ EOF
 )
 
 response=$(make_request "POST" "/api/auth/register" "$manager_data")
-http_code=$(echo "$response" | tail -n1)
-body=$(echo "$response" | head -n-1)
+http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+body=$(echo "$response" | grep -v "HTTP_STATUS:")
 
 if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
     MANAGER_TOKEN=$(echo "$body" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)

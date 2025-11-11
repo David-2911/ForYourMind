@@ -96,16 +96,25 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
 
     try {
-      await apiRequest("PATCH", "/user/password", {
+      const response = await apiRequest("PATCH", "/user/password", {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
+      
       toast({
         title: "Password changed",
-        description: "Your password has been successfully updated.",
+        description: "Your password has been successfully updated. Please log in again with your new password.",
       });
+      
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setChangingPassword(false);
+      
+      // Log out user so they can log in with new password
+      // This prevents confusion with token validation
+      setTimeout(() => {
+        logout();
+      }, 2000); // Give user 2 seconds to read the success message
+      
     } catch (error: any) {
       toast({
         title: "Password change failed",
