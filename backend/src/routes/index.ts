@@ -855,8 +855,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const assessments = await storage.getWellnessAssessments(userId);
       res.json(assessments);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get assessments", error });
+    } catch (error: any) {
+      console.error('Error getting assessments:', error.message || error);
+      res.status(500).json({ message: "Failed to get assessments", error: error.message });
     }
   });
 
@@ -870,8 +871,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(assessment);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get assessment", error });
+    } catch (error: any) {
+      console.error('Error getting assessment:', error.message || error);
+      res.status(500).json({ message: "Failed to get assessment", error: error.message });
     }
   });
 
@@ -901,8 +903,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const savedResponse = await storage.createAssessmentResponse(responseData);
       res.status(201).json(savedResponse);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to submit assessment", error });
+    } catch (error: any) {
+      console.error('Error submitting assessment:', error.message || error);
+      res.status(500).json({ message: "Failed to submit assessment", error: error.message });
     }
   });
 
@@ -911,8 +914,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const responses = await storage.getUserAssessmentResponses(userId);
       res.json(responses);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get responses", error });
+    } catch (error: any) {
+      console.error('Error getting responses:', error.message || error);
+      res.status(500).json({ message: "Failed to get responses", error: error.message });
     }
   });
 
@@ -921,8 +925,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = (req as any).user;
       const latestResponse = await storage.getLatestAssessmentResponse(userId);
       res.json(latestResponse);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get latest response", error });
+    } catch (error: any) {
+      console.error('Error getting latest response:', error.message || error);
+      res.status(500).json({ message: "Failed to get latest response", error: error.message });
     }
   });
 
