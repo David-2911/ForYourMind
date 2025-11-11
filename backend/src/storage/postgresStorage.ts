@@ -129,17 +129,20 @@ export class PostgresStorage implements IStorage {
     if ((updates as any).password !== undefined) {
       fields.push(`password = $${paramCount++}`);
       values.push((updates as any).password);
+      console.log(`[updateUser] Password field detected, will update password`);
     }
     
     if (fields.length === 0) return await this.getUser(id);
     
     values.push(id);
     
+    const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount}`;
+    console.log(`[updateUser] Query: ${query}`);
+    console.log(`[updateUser] Values count: ${values.length}, Fields: ${fields.join(', ')}`);
+    
     try {
-      await this.client.query(
-        `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount}`,
-        values
-      );
+      const result = await this.client.query(query, values);
+      console.log(`[updateUser] Update result rows affected: ${result.rowCount}`);
       
       return await this.getUser(id);
     } catch (err) {

@@ -302,7 +302,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bcrypt = await import("bcrypt");
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       
-      await storage.updateUser(userId, { password: hashedPassword } as any);
+      console.log(`[Password Change] User ${userId} changing password`);
+      console.log(`[Password Change] Hashed password length: ${hashedPassword.length}`);
+      
+      const updateResult = await storage.updateUser(userId, { password: hashedPassword } as any);
+      
+      if (!updateResult) {
+        console.error(`[Password Change] Failed to update user ${userId} - updateUser returned undefined`);
+        return res.status(500).json({ message: "Failed to update password in database" });
+      }
+      
+      console.log(`[Password Change] Successfully updated password for user ${userId}`);
 
       // Inform frontend that re-authentication is required
       // The current JWT token will remain valid until expiry, but we signal
@@ -312,6 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requiresReauthentication: true 
       });
     } catch (error) {
+      console.error('[Password Change] Error:', error);
       res.status(500).json({ message: "Failed to change password", error });
     }
   });
