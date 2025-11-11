@@ -56,13 +56,13 @@ class AuthService {
       if (!response.ok) {
         console.error(`Login failed with status ${response.status}`);
         
-        // Try to parse response as JSON, but handle if it's not
+        // Read response as text first, then try to parse as JSON
+        const text = await response.text();
         try {
-          const errorData = await response.json();
+          const errorData = JSON.parse(text);
           throw new Error(errorData.message || "Login failed");
         } catch (parseError) {
-          // If we can't parse as JSON, get the text and log it
-          const text = await response.text();
+          // If we can't parse as JSON, use the text
           console.error("Response is not valid JSON:", text.substring(0, 100));
           throw new Error(`Login failed: Server returned invalid response (${response.status})`);
         }
@@ -120,13 +120,13 @@ class AuthService {
       if (!response.ok) {
         console.error(`Registration failed with status ${response.status}`);
         
-        // Try to parse response as JSON, but handle if it's not
+        // Read response as text first, then try to parse as JSON
+        const text = await response.text();
         try {
-          const errorData = await response.json();
+          const errorData = JSON.parse(text);
           throw new Error(errorData.message || "Registration failed");
         } catch (parseError) {
-          // If we can't parse as JSON, get the text and log it
-          const text = await response.text();
+          // If we can't parse as JSON, use the text
           console.error("Response is not valid JSON:", text.substring(0, 100));
           throw new Error(`Registration failed: Server returned invalid response (${response.status})`);
         }
