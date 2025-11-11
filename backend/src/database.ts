@@ -51,10 +51,10 @@ export async function initializeDatabase() {
         console.log("All required tables found in the database");
       }
     } catch (error) {
-      console.error("Error checking database tables:", error);
+      console.error("Error checking database tables:", error instanceof Error ? error.message : String(error));
     }
   } catch (error) {
-    console.error("Neon database connection failed:", error);
+    console.error("Neon database connection failed:", error instanceof Error ? error.message : String(error));
     // Fall back to in-memory storage
   }
 }

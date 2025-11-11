@@ -450,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const entry = await storage.createMoodEntry(moodData);
       res.status(201).json(entry);
     } catch (error: any) {
-      console.error('Error creating mood entry:', error.message || error);
+      console.error('Error creating mood entry:', error?.message || String(error));
       res.status(400).json({ message: "Failed to create mood entry", error: error.message });
     }
   });
@@ -462,7 +462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const entries = await storage.getUserMoodEntries(userId, days);
       res.json(entries);
     } catch (error: any) {
-      console.error('Error getting mood entries:', error.message || error);
+      console.error('Error getting mood entries:', error?.message || String(error));
       res.status(500).json({ message: "Failed to get mood entries", error: error.message });
     }
   });
@@ -858,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assessments = await storage.getWellnessAssessments(userId);
       res.json(assessments);
     } catch (error: any) {
-      console.error('Error getting assessments:', error.message || error);
+      console.error('Error getting assessments:', error?.message || String(error));
       res.status(500).json({ message: "Failed to get assessments", error: error.message });
     }
   });
@@ -874,7 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(assessment);
     } catch (error: any) {
-      console.error('Error getting assessment:', error.message || error);
+      console.error('Error getting assessment:', error?.message || String(error));
       res.status(500).json({ message: "Failed to get assessment", error: error.message });
     }
   });
@@ -906,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const savedResponse = await storage.createAssessmentResponse(responseData);
       res.status(201).json(savedResponse);
     } catch (error: any) {
-      console.error('Error submitting assessment:', error.message || error);
+      console.error('Error submitting assessment:', error?.message || String(error));
       res.status(500).json({ message: "Failed to submit assessment", error: error.message });
     }
   });
@@ -917,7 +917,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const responses = await storage.getUserAssessmentResponses(userId);
       res.json(responses);
     } catch (error: any) {
-      console.error('Error getting responses:', error.message || error);
+      console.error('Error getting responses:', error?.message || String(error));
       res.status(500).json({ message: "Failed to get responses", error: error.message });
     }
   });
@@ -928,7 +928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const latestResponse = await storage.getLatestAssessmentResponse(userId);
       res.json(latestResponse);
     } catch (error: any) {
-      console.error('Error getting latest response:', error.message || error);
+      console.error('Error getting latest response:', error?.message || String(error));
       res.status(500).json({ message: "Failed to get latest response", error: error.message });
     }
   });

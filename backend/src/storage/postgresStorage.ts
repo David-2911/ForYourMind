@@ -30,7 +30,7 @@ export class PostgresStorage implements IStorage {
         this.connected = true;
         console.log('PostgreSQL connected successfully');
       } catch (err) {
-        console.error('PostgreSQL connection error:', err);
+        console.error('PostgreSQL connection error:', err?.message || String(err));
         throw err;
       }
     }
@@ -55,7 +55,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(user.created_at)
       } as User;
     } catch (err) {
-      console.error('Error getting user:', err);
+      console.error('Error getting user:', err?.message || String(err));
       return undefined;
     }
   }
@@ -67,7 +67,7 @@ export class PostgresStorage implements IStorage {
       
       return this.getUser(result.rows[0].id);
     } catch (err) {
-      console.error('Error getting user by email:', err);
+      console.error('Error getting user by email:', err?.message || String(err));
       return undefined;
     }
   }
@@ -95,7 +95,7 @@ export class PostgresStorage implements IStorage {
       
       return (await this.getUser(id)) as User;
     } catch (err) {
-      console.error('Error creating user:', err);
+      console.error('Error creating user:', err?.message || String(err));
       throw new Error(`Failed to create user: ${err.message}`);
     }
   }
@@ -146,7 +146,7 @@ export class PostgresStorage implements IStorage {
       
       return await this.getUser(id);
     } catch (err) {
-      console.error('Error updating user:', err);
+      console.error('Error updating user:', err?.message || String(err));
       return undefined;
     }
   }
@@ -167,7 +167,7 @@ export class PostgresStorage implements IStorage {
       const result = await this.client.query('DELETE FROM users WHERE id = $1', [id]);
       return (result.rowCount ?? 0) > 0;
     } catch (err) {
-      console.error('Error deleting user:', err);
+      console.error('Error deleting user:', err?.message || String(err));
       return false;
     }
   }
@@ -182,7 +182,7 @@ export class PostgresStorage implements IStorage {
       
       return ok ? (await this.getUser(user.id)) as User : null;
     } catch (err) {
-      console.error('Error verifying password:', err);
+      console.error('Error verifying password:', err?.message || String(err));
       return null;
     }
   }
@@ -219,7 +219,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(journal.created_at)
       } as Journal;
     } catch (err) {
-      console.error('Error creating journal:', err);
+      console.error('Error creating journal:', err?.message || String(err));
       throw new Error(`Failed to create journal: ${err.message}`);
     }
   }
@@ -241,7 +241,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(j.created_at)
       })) as Journal[];
     } catch (err) {
-      console.error('Error getting user journals:', err);
+      console.error('Error getting user journals:', err?.message || String(err));
       return [];
     }
   }
@@ -262,7 +262,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(j.created_at)
       } as Journal;
     } catch (err) {
-      console.error('Error getting journal:', err);
+      console.error('Error getting journal:', err?.message || String(err));
       return undefined;
     }
   }
@@ -304,7 +304,7 @@ export class PostgresStorage implements IStorage {
       
       return await this.getJournal(id);
     } catch (err) {
-      console.error('Error updating journal:', err);
+      console.error('Error updating journal:', err?.message || String(err));
       return undefined;
     }
   }
@@ -314,7 +314,7 @@ export class PostgresStorage implements IStorage {
       const result = await this.client.query('DELETE FROM journals WHERE id = $1', [id]);
       return result.rowCount > 0;
     } catch (err) {
-      console.error('Error deleting journal:', err);
+      console.error('Error deleting journal:', err?.message || String(err));
       return false;
     }
   }
@@ -349,7 +349,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(rant.created_at)
       } as AnonymousRant;
     } catch (err) {
-      console.error('Error creating anonymous rant:', err);
+      console.error('Error creating anonymous rant:', err?.message || String(err));
       throw new Error(`Failed to create anonymous rant: ${err.message}`);
     }
   }
@@ -369,7 +369,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(r.created_at)
       })) as AnonymousRant[];
     } catch (err) {
-      console.error('Error getting anonymous rants:', err);
+      console.error('Error getting anonymous rants:', err?.message || String(err));
       return [];
     }
   }
@@ -382,7 +382,7 @@ export class PostgresStorage implements IStorage {
       );
       return true;
     } catch (err) {
-      console.error('Error supporting anonymous rant:', err);
+      console.error('Error supporting anonymous rant:', err?.message || String(err));
       return false;
     }
   }
@@ -415,7 +415,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(entry.created_at)
       } as MoodEntry;
     } catch (err) {
-      console.error('Error creating mood entry:', err);
+      console.error('Error creating mood entry:', err?.message || String(err));
       throw new Error(`Failed to create mood entry: ${err.message}`);
     }
   }
@@ -444,7 +444,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(e.created_at)
       })) as MoodEntry[];
     } catch (err) {
-      console.error('Error getting user mood entries:', err);
+      console.error('Error getting user mood entries:', err?.message || String(err));
       return [];
     }
   }
@@ -464,7 +464,7 @@ export class PostgresStorage implements IStorage {
         availability: t.availability || {}
       })) as Therapist[];
     } catch (err) {
-      console.error('Error getting therapists:', err);
+      console.error('Error getting therapists:', err?.message || String(err));
       return [];
     }
   }
@@ -485,7 +485,7 @@ export class PostgresStorage implements IStorage {
         availability: t.availability || {}
       } as Therapist;
     } catch (err) {
-      console.error('Error getting therapist:', err);
+      console.error('Error getting therapist:', err?.message || String(err));
       return undefined;
     }
   }
@@ -522,7 +522,7 @@ export class PostgresStorage implements IStorage {
         notes: a.notes
       } as Appointment;
     } catch (err) {
-      console.error('Error creating appointment:', err);
+      console.error('Error creating appointment:', err?.message || String(err));
       throw new Error(`Failed to create appointment: ${err.message}`);
     }
   }
@@ -544,7 +544,7 @@ export class PostgresStorage implements IStorage {
         notes: a.notes
       })) as Appointment[];
     } catch (err) {
-      console.error('Error getting user appointments:', err);
+      console.error('Error getting user appointments:', err?.message || String(err));
       return [];
     }
   }
@@ -569,7 +569,7 @@ export class PostgresStorage implements IStorage {
         notes: a.notes
       } as Appointment;
     } catch (err) {
-      console.error('Error getting appointment:', err);
+      console.error('Error getting appointment:', err?.message || String(err));
       return undefined;
     }
   }
@@ -621,7 +621,7 @@ export class PostgresStorage implements IStorage {
         notes: a.notes
       } as Appointment;
     } catch (err) {
-      console.error('Error updating appointment:', err);
+      console.error('Error updating appointment:', err?.message || String(err));
       return undefined;
     }
   }
@@ -634,7 +634,7 @@ export class PostgresStorage implements IStorage {
       );
       return (result.rowCount ?? 0) > 0;
     } catch (err) {
-      console.error('Error deleting appointment:', err);
+      console.error('Error deleting appointment:', err?.message || String(err));
       return false;
     }
   }
@@ -654,7 +654,7 @@ export class PostgresStorage implements IStorage {
         modules: c.modules || {}
       })) as Course[];
     } catch (err) {
-      console.error('Error getting courses:', err);
+      console.error('Error getting courses:', err?.message || String(err));
       return [];
     }
   }
@@ -672,7 +672,7 @@ export class PostgresStorage implements IStorage {
       );
       return token;
     } catch (err) {
-      console.error('Error creating refresh token:', err);
+      console.error('Error creating refresh token:', err?.message || String(err));
       throw new Error(`Failed to create refresh token: ${err.message}`);
     }
   }
@@ -696,7 +696,7 @@ export class PostgresStorage implements IStorage {
       
       return refreshToken.user_id;
     } catch (err) {
-      console.error('Error verifying refresh token:', err);
+      console.error('Error verifying refresh token:', err?.message || String(err));
       return null;
     }
   }
@@ -706,7 +706,7 @@ export class PostgresStorage implements IStorage {
       await this.client.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
       return true;
     } catch (err) {
-      console.error('Error deleting refresh token:', err);
+      console.error('Error deleting refresh token:', err?.message || String(err));
       return false;
     }
   }
@@ -734,7 +734,7 @@ export class PostgresStorage implements IStorage {
         createdAt: new Date(org.created_at)
       } as Organization;
     } catch (err) {
-      console.error('Error creating organization:', err);
+      console.error('Error creating organization:', err?.message || String(err));
       throw new Error(`Failed to create organization: ${err.message}`);
     }
   }
@@ -763,7 +763,7 @@ export class PostgresStorage implements IStorage {
         wellnessStreak: emp.wellness_streak
       } as Employee;
     } catch (err) {
-      console.error('Error adding employee to org:', err);
+      console.error('Error adding employee to org:', err?.message || String(err));
       throw new Error(`Failed to add employee to org: ${err.message}`);
     }
   }
@@ -785,7 +785,7 @@ export class PostgresStorage implements IStorage {
         wellnessStreak: e.wellness_streak
       })) as Employee[];
     } catch (err) {
-      console.error('Error getting employees by org:', err);
+      console.error('Error getting employees by org:', err?.message || String(err));
       return [];
     }
   }
@@ -819,7 +819,7 @@ export class PostgresStorage implements IStorage {
         preferences: u.preferences || {}
       })) as User[];
     } catch (err) {
-      console.error('Error suggesting buddies:', err);
+      console.error('Error suggesting buddies:', err?.message || String(err));
       return [];
     }
   }
@@ -837,7 +837,7 @@ export class PostgresStorage implements IStorage {
       const result = await this.client.query('SELECT * FROM buddy_matches WHERE id = $1', [id]);
       return result.rows[0];
     } catch (err) {
-      console.error('Error creating buddy match:', err);
+      console.error('Error creating buddy match:', err?.message || String(err));
       throw new Error(`Failed to create buddy match: ${err.message}`);
     }
   }
@@ -850,7 +850,7 @@ export class PostgresStorage implements IStorage {
       );
       return true;
     } catch (err) {
-      console.error('Error updating buddy match status:', err);
+      console.error('Error updating buddy match status:', err?.message || String(err));
       return false;
     }
   }
@@ -873,7 +873,7 @@ export class PostgresStorage implements IStorage {
         createdAt: row.created_at
       }));
     } catch (err) {
-      console.error('Error getting wellness assessments:', err);
+      console.error('Error getting wellness assessments:', err?.message || String(err));
       return [];
     }
   }
@@ -898,7 +898,7 @@ export class PostgresStorage implements IStorage {
         createdAt: row.created_at
       };
     } catch (err) {
-      console.error('Error getting wellness assessment:', err);
+      console.error('Error getting wellness assessment:', err?.message || String(err));
       return null;
     }
   }
@@ -936,7 +936,7 @@ export class PostgresStorage implements IStorage {
         completedAt: row.completed_at
       };
     } catch (err) {
-      console.error('Error creating assessment response:', err);
+      console.error('Error creating assessment response:', err?.message || String(err));
       throw new Error(`Failed to create assessment response: ${err.message}`);
     }
   }
@@ -959,7 +959,7 @@ export class PostgresStorage implements IStorage {
         completedAt: row.completed_at
       }));
     } catch (err) {
-      console.error('Error getting user assessment responses:', err);
+      console.error('Error getting user assessment responses:', err?.message || String(err));
       return [];
     }
   }
@@ -985,7 +985,7 @@ export class PostgresStorage implements IStorage {
         completedAt: row.completed_at
       };
     } catch (err) {
-      console.error('Error getting latest assessment response:', err);
+      console.error('Error getting latest assessment response:', err?.message || String(err));
       return null;
     }
   }
