@@ -74,6 +74,19 @@ export default function EmployeeDashboard() {
     queryKey: ["/mood"],
   });
 
+  // Fetch mood statistics
+  const { data: moodStats } = useQuery<{
+    average: number | null;
+    trend: string;
+    bestMood: number;
+    worstMood: number;
+    totalEntries: number;
+    daysTracked: number;
+  }>({
+    queryKey: ["/mood/stats"],
+    enabled: !!user,
+  });
+
   // Fetch latest assessment response
   const { data: latestAssessment } = useQuery<AssessmentResponse>({
     queryKey: ["/wellness-assessments/responses/latest"],
@@ -320,6 +333,20 @@ export default function EmployeeDashboard() {
           <h4 className="font-semibold mb-2 text-sm md:text-base">Day Streak</h4>
           <p className="text-xs md:text-sm text-muted-foreground">Keep it up!</p>
         </GlassmorphicCard>
+
+        {/* Mood Statistics */}
+        {moodStats && moodStats.average !== null && (
+          <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">
+            <Brain className="w-12 h-12 md:w-16 md:h-16 text-accent mb-4 mx-auto animate-pulse-gentle" />
+            <h4 className="font-semibold mb-2 text-sm md:text-base">Mood Average</h4>
+            <p className="text-xl md:text-2xl font-bold text-ring">{moodStats.average}/10</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              {moodStats.trend === 'improving' && '↗ Improving'}
+              {moodStats.trend === 'declining' && '↘ Declining'}
+              {moodStats.trend === 'neutral' && '→ Stable'}
+            </p>
+          </GlassmorphicCard>
+        )}
 
         {/* Today's Sessions */}
         <GlassmorphicCard className="text-center animate-fade-in-up hover:scale-105 transition-all duration-300">

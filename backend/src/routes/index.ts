@@ -273,6 +273,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Change password
+  app.patch("/api/user/password", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password required" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters" });
+      }
+
+      // Get user and verify current password
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isValid = await storage.verifyPassword(user.email, currentPassword);
+      if (!isValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      // Update password
+      const bcrypt = await import("bcrypt");
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      await storage.updateUser(userId, { password: hashedPassword } as any);
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to change password", error });
+    }
+  });
+
+  // Delete account
+  app.delete("/api/user/account", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Password required to delete account" });
+      }
+
+      // Verify password before deletion
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isValid = await storage.verifyPassword(user.email, password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Incorrect password" });
+      }
+
+      // Delete user (note: storage layer needs deleteUser method)
+      if (storage.deleteUser) {
+        await storage.deleteUser(userId);
+        res.json({ message: "Account deleted successfully" });
+      } else {
+        res.status(501).json({ message: "Account deletion not implemented in storage layer" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete account", error });
+    }
+  });
+
   // Journal routes
   app.post("/api/journals", authenticateToken, async (req: Request, res: Response) => {
     try {
@@ -293,6 +363,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(journals);
     } catch (error) {
       res.status(500).json({ message: "Failed to get journals", error });
+    }
+  });
+
+  app.get("/api/journals/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { userId } = (req as any).user;
+      
+      const journal = await storage.getJournal(id);
+      
+      if (!journal) {
+        return res.status(404).json({ message: "Journal not found" });
+      }
+
+      // Verify ownership
+      if (journal.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json(journal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get journal", error });
     }
   });
 
@@ -353,6 +445,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(entries);
     } catch (error) {
       res.status(500).json({ message: "Failed to get mood entries", error });
+    }
+  });
+
+  app.get("/api/mood/stats", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId } = (req as any).user;
+      const days = parseInt(req.query.days as string) || 30;
+      const entries = await storage.getUserMoodEntries(userId, days);
+
+      if (entries.length === 0) {
+        return res.json({
+          average: null,
+          trend: "neutral",
+          totalEntries: 0,
+          daysTracked: days
+        });
+      }
+
+      // Calculate average mood
+      const moodValues = entries.map(e => e.moodScore);
+      const average = moodValues.reduce((a, b) => a + b, 0) / moodValues.length;
+
+      // Calculate trend (comparing first half to second half)
+      const midpoint = Math.floor(entries.length / 2);
+      const firstHalf = moodValues.slice(0, midpoint);
+      const secondHalf = moodValues.slice(midpoint);
+      
+      const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+      const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+      
+      let trend = "neutral";
+      if (secondAvg > firstAvg + 0.5) trend = "improving";
+      else if (secondAvg < firstAvg - 0.5) trend = "declining";
+
+      // Find best and worst moods
+      const bestMood = Math.max(...moodValues);
+      const worstMood = Math.min(...moodValues);
+
+      res.json({
+        average: Math.round(average * 10) / 10,
+        trend,
+        bestMood,
+        worstMood,
+        totalEntries: entries.length,
+        daysTracked: days
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get mood statistics", error });
     }
   });
 
@@ -439,6 +579,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/appointments/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { userId } = (req as any).user;
+      
+      const appointment = await storage.getAppointment(id);
+      
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      // Verify ownership
+      if (appointment.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json(appointment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get appointment", error });
+    }
+  });
+
+  app.put("/api/appointments/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { userId } = (req as any).user;
+      
+      // Verify ownership
+      const existing = await storage.getAppointment(id);
+      if (!existing || existing.userId !== userId) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      const updated = await storage.updateAppointment(id, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update appointment", error });
+    }
+  });
+
+  app.delete("/api/appointments/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { userId } = (req as any).user;
+      
+      // Verify ownership
+      const existing = await storage.getAppointment(id);
+      if (!existing || existing.userId !== userId) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      const deleted = await storage.deleteAppointment(id);
+      res.json({ success: deleted });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete appointment", error });
+    }
+  });
+
   // Courses routes
   app.get("/api/courses", authenticateToken, async (req: Request, res: Response) => {
     try {
@@ -446,6 +644,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(courses);
     } catch (error) {
       res.status(500).json({ message: "Failed to get courses", error });
+    }
+  });
+
+  app.get("/api/courses/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const course = await storage.getCourse(id);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      res.json(course);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get course", error });
     }
   });
 

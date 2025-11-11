@@ -18,7 +18,7 @@ interface TherapistsModalProps {
 
 export default function TherapistsModal({ isOpen, onClose }: TherapistsModalProps) {
   const { data: therapists = [], isLoading } = useQuery({
-    queryKey: ["/api/therapists"],
+    queryKey: ["/therapists"],
     enabled: isOpen,
   });
 

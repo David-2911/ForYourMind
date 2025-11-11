@@ -1,0 +1,200 @@
+
+=== 1. ALL TABLES IN DATABASE ===
+ table_name | column_count 
+------------+--------------
+(0 rows)
+
+
+=== 2. USERS TABLE SCHEMA ===
+ column_name | data_type | character_maximum_length | is_nullable | column_default 
+-------------+-----------+--------------------------+-------------+----------------
+(0 rows)
+
+
+=== Users Table Constraints ===
+ constraint_name | constraint_type | column_name 
+-----------------+-----------------+-------------
+(0 rows)
+
+
+=== 3. MOOD_ENTRIES TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Mood Entries Foreign Keys ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 4. JOURNALS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Journals Foreign Keys ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 5A. WELLNESS_ASSESSMENTS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 5B. ASSESSMENT_RESPONSES TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Wellness Assessment Foreign Keys ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 6. ANONYMOUS_RANTS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Anonymous Rants Foreign Keys (should be NONE) ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 7A. THERAPISTS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 7B. APPOINTMENTS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Therapist/Appointments Foreign Keys ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 8A. ORGANIZATIONS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 8B. EMPLOYEES TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 8C. WELLBEING_SURVEYS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 8D. SURVEY_RESPONSES TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Manager Tables Foreign Keys ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 9. REFRESH_TOKENS TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 10. BUDDY_MATCHES TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== Buddy Matches Foreign Keys ===
+ table_name | column_name | foreign_table_name | foreign_column_name 
+------------+-------------+--------------------+---------------------
+(0 rows)
+
+
+=== 11. COURSES TABLE SCHEMA ===
+ column_name | data_type | is_nullable | column_default 
+-------------+-----------+-------------+----------------
+(0 rows)
+
+
+=== 12. ALL INDEXES ===
+ tablename | indexname | indexdef 
+-----------+-----------+----------
+(0 rows)
+
+
+=== 13. COMPLETE FOREIGN KEY MAP ===
+ from_table | from_column | to_table | to_column | constraint_name 
+------------+-------------+----------+-----------+-----------------
+(0 rows)
+
+
+=== 14. DRIZZLE MIGRATIONS APPLIED ===
+psql:scripts/verify-database-schema.sql:519: ERROR:  relation "drizzle_migrations" does not exist
+LINE 1: SELECT * FROM drizzle_migrations ORDER BY created_at;
+                      ^
+
+=== 15. TABLE ROW COUNTS ===
+psql:scripts/verify-database-schema.sql:559: ERROR:  relation "users" does not exist
+LINE 2:     'users' as table_name, COUNT(*) as row_count FROM users
+                                                              ^
+
+=== 16. SCHEMA HEALTH CHECK ===
+
+--- Tables without primary keys (should be empty):
+ table_name 
+------------
+(0 rows)
+
+
+--- Check for orphaned appointments (therapist_id not in therapists):
+psql:scripts/verify-database-schema.sql:584: ERROR:  relation "appointments" does not exist
+LINE 2: FROM appointments a
+             ^
+
+--- Check for orphaned appointments (user_id not in users):
+psql:scripts/verify-database-schema.sql:590: ERROR:  relation "appointments" does not exist
+LINE 2: FROM appointments a
+             ^
+
+--- Check for orphaned mood_entries:
+psql:scripts/verify-database-schema.sql:596: ERROR:  relation "mood_entries" does not exist
+LINE 2: FROM mood_entries m
+             ^
+
+--- Check for orphaned journals:
+psql:scripts/verify-database-schema.sql:602: ERROR:  relation "journals" does not exist
+LINE 2: FROM journals j
+             ^
+
+=== VERIFICATION COMPLETE ===
+Review the output above to ensure all tables, columns, constraints,
+foreign keys, and indexes are present and correct.
+
+For a visual schema diagram, see DATABASE_SCHEMA_DIAGRAM.md

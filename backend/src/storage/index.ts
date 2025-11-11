@@ -11,6 +11,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  deleteUser?(id: string): Promise<boolean>;
   verifyPassword(email: string, password: string): Promise<User | null>;
 
   // Journal operations
@@ -36,6 +37,9 @@ export interface IStorage {
   // Appointments
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   getUserAppointments(userId: string): Promise<Appointment[]>;
+  getAppointment?(id: string): Promise<Appointment | undefined>;
+  updateAppointment?(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined>;
+  deleteAppointment?(id: string): Promise<boolean>;
 
   // Courses
   getCourses(): Promise<Course[]>;

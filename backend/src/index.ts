@@ -46,11 +46,61 @@ app.get("/ready", (req, res) => {
   try {
     const server = await registerRoutes(app);
     
+    // 404 handler - must come after all routes
+    app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        error: "Endpoint not found",
+        path: req.path,
+        method: req.method
+      });
+    });
+
+    // Global error handler - must be last middleware
+    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      console.error("Unhandled error:", {
+        message: err.message,
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+        path: req.path,
+        method: req.method
+      });
+
+      // Don't expose sensitive error details in production
+      const statusCode = err.statusCode || err.status || 500;
+      
+      if (process.env.NODE_ENV === "production") {
+        res.status(statusCode).json({
+          success: false,
+          error: statusCode === 500 ? "Internal server error" : err.message,
+          ...(err.code && { code: err.code })
+        });
+      } else {
+        res.status(statusCode).json({
+          success: false,
+          error: err.message,
+          stack: err.stack,
+          details: err.details || undefined
+        });
+      }
+    });
+    
     // Start the server
     server.listen(PORT, () => {
       console.log(`✅ Backend server running on http://localhost:${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🗄️  Database: ${process.env.USE_SQLITE ? "SQLite" : "PostgreSQL"}`);
+    });
+
+    // Handle uncaught exceptions
+    process.on("uncaughtException", (error) => {
+      console.error("❌ Uncaught Exception:", error);
+      process.exit(1);
+    });
+
+    // Handle unhandled promise rejections
+    process.on("unhandledRejection", (reason, promise) => {
+      console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+      process.exit(1);
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);

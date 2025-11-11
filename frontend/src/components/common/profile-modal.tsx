@@ -25,9 +25,15 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [formData, setFormData] = useState({
     displayName: "",
     email: "",
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const { user, logout } = useAuth();
   const { toast } = useToast();
@@ -68,6 +74,45 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       email: profile?.email || "",
     });
     setEditing(false);
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "New password and confirmation must match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest("PATCH", "/user/password", {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      toast({
+        title: "Password changed",
+        description: "Your password has been successfully updated.",
+      });
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setChangingPassword(false);
+    } catch (error: any) {
+      toast({
+        title: "Password change failed",
+        description: error.message || "Failed to change password. Please check your current password.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -182,6 +227,74 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       {new Date().toLocaleDateString()}
                     </span>
                   </div>
+                </div>
+              </GlassmorphicCard>
+
+              {/* Preferences */}
+              <GlassmorphicCard className="p-6">
+                <h4 className="text-lg font-semibold mb-4 text-foreground flex items-center">
+                  <Lock className="w-5 h-5 mr-2" />
+                  Security
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Lock className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Password</p>
+                        <p className="text-sm text-muted-foreground">Change your account password</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setChangingPassword(!changingPassword)}
+                    >
+                      {changingPassword ? "Cancel" : "Change"}
+                    </Button>
+                  </div>
+                  
+                  {changingPassword && (
+                    <div className="space-y-3 pt-3 border-t animate-fade-in-up">
+                      <div>
+                        <Label htmlFor="currentPassword">Current Password</Label>
+                        <Input
+                          id="currentPassword"
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                          placeholder="Enter current password"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          placeholder="Enter new password (min 8 characters)"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      <Button 
+                        onClick={handlePasswordChange} 
+                        className="w-full btn-primary"
+                        disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                      >
+                        Update Password
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </GlassmorphicCard>
 

@@ -124,6 +124,12 @@ export class PostgresStorage implements IStorage {
       fields.push(`preferences = $${paramCount++}`);
       values.push(JSON.stringify(updates.preferences));
     }
+
+    // Support password updates (for password change endpoint)
+    if ((updates as any).password !== undefined) {
+      fields.push(`password = $${paramCount++}`);
+      values.push((updates as any).password);
+    }
     
     if (fields.length === 0) return await this.getUser(id);
     
@@ -139,6 +145,27 @@ export class PostgresStorage implements IStorage {
     } catch (err) {
       console.error('Error updating user:', err);
       return undefined;
+    }
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      // Delete user data in order (foreign key constraints)
+      await this.client.query('DELETE FROM assessment_responses WHERE user_id = $1', [id]);
+      await this.client.query('DELETE FROM course_progress WHERE user_id = $1', [id]);
+      await this.client.query('DELETE FROM appointments WHERE user_id = $1', [id]);
+      await this.client.query('DELETE FROM mood_entries WHERE user_id = $1', [id]);
+      await this.client.query('DELETE FROM journals WHERE user_id = $1', [id]);
+      await this.client.query('DELETE FROM buddy_matches WHERE user_a_id = $1 OR user_b_id = $1', [id]);
+      await this.client.query('DELETE FROM employees WHERE user_id = $1', [id]);
+      await this.client.query('DELETE FROM refresh_tokens WHERE user_id = $1', [id]);
+      
+      // Finally delete the user
+      const result = await this.client.query('DELETE FROM users WHERE id = $1', [id]);
+      return (result.rowCount ?? 0) > 0;
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      return false;
     }
   }
   
@@ -516,6 +543,96 @@ export class PostgresStorage implements IStorage {
     } catch (err) {
       console.error('Error getting user appointments:', err);
       return [];
+    }
+  }
+
+  async getAppointment(id: string): Promise<Appointment | undefined> {
+    try {
+      const result = await this.client.query(
+        'SELECT * FROM appointments WHERE id = $1',
+        [id]
+      );
+      
+      if (result.rows.length === 0) return undefined;
+      
+      const a = result.rows[0];
+      return {
+        id: a.id,
+        therapistId: a.therapist_id,
+        userId: a.user_id,
+        startTime: new Date(a.start_time),
+        endTime: new Date(a.end_time),
+        status: a.status,
+        notes: a.notes
+      } as Appointment;
+    } catch (err) {
+      console.error('Error getting appointment:', err);
+      return undefined;
+    }
+  }
+
+  async updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined> {
+    try {
+      const setClauses: string[] = [];
+      const values: any[] = [];
+      let paramCount = 1;
+
+      if (updates.startTime !== undefined) {
+        setClauses.push(`start_time = $${paramCount++}`);
+        values.push(updates.startTime);
+      }
+      if (updates.endTime !== undefined) {
+        setClauses.push(`end_time = $${paramCount++}`);
+        values.push(updates.endTime);
+      }
+      if (updates.status !== undefined) {
+        setClauses.push(`status = $${paramCount++}`);
+        values.push(updates.status);
+      }
+      if (updates.notes !== undefined) {
+        setClauses.push(`notes = $${paramCount++}`);
+        values.push(updates.notes);
+      }
+
+      if (setClauses.length === 0) {
+        return this.getAppointment(id);
+      }
+
+      values.push(id);
+      
+      const result = await this.client.query(
+        `UPDATE appointments SET ${setClauses.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+        values
+      );
+
+      if (result.rows.length === 0) return undefined;
+
+      const a = result.rows[0];
+      return {
+        id: a.id,
+        therapistId: a.therapist_id,
+        userId: a.user_id,
+        startTime: new Date(a.start_time),
+        endTime: new Date(a.end_time),
+        status: a.status,
+        notes: a.notes
+      } as Appointment;
+    } catch (err) {
+      console.error('Error updating appointment:', err);
+      return undefined;
+    }
+  }
+
+  async deleteAppointment(id: string): Promise<boolean> {
+    try {
+      const result = await this.client.query(
+        'DELETE FROM appointments WHERE id = $1',
+        [id]
+      );
+      return (result.rowCount ?? 0) > 0;
+    } catch (err) {
+      console.error('Error deleting appointment:', err);
+      return false;
     }
   }
   
