@@ -607,7 +607,8 @@ export class MemStorage implements IStorage {
 }
 
 // Use PostgreSQL if DATABASE_URL is set, or SQLite if requested, otherwise use in-memory
-const useSqlite = !!process.env.USE_SQLITE || !!process.env.SQLITE_DB_PATH;
+// IMPORTANT: Check for string "true" explicitly (environment variables are always strings)
+const useSqlite = process.env.USE_SQLITE === "true" || !!process.env.SQLITE_DB_PATH;
 const usePostgres = !!process.env.DATABASE_URL && !useSqlite;
 
 // Debug logging to troubleshoot storage selection
