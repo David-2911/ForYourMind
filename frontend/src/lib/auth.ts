@@ -65,14 +65,18 @@ class AuthService {
       if (!response.ok) {
         console.error(`Login failed with status ${response.status}`);
         
+        // Try to parse error message from JSON
+        let errorMessage = "Login failed";
         try {
           const errorData = JSON.parse(text);
-          throw new Error(errorData.message || "Login failed");
+          errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
-          // If we can't parse as JSON, use the text
-          console.error("Response is not valid JSON:", text.substring(0, 100));
-          throw new Error(`Login failed: Server returned invalid response (${response.status})`);
+          // If we can't parse as JSON, use the raw text or status
+          console.error("Could not parse error response:", text.substring(0, 100));
+          errorMessage = text || `Login failed with status ${response.status}`;
         }
+        
+        throw new Error(errorMessage);
       }
 
       // Parse successful response
@@ -142,14 +146,18 @@ class AuthService {
       if (!response.ok) {
         console.error(`Registration failed with status ${response.status}`);
         
+        // Try to parse error message from JSON
+        let errorMessage = "Registration failed";
         try {
           const errorData = JSON.parse(text);
-          throw new Error(errorData.message || "Registration failed");
+          errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
-          // If we can't parse as JSON, use the text
-          console.error("Response is not valid JSON:", text.substring(0, 100));
-          throw new Error(`Registration failed: Server returned invalid response (${response.status})`);
+          // If we can't parse as JSON, use the raw text or status
+          console.error("Could not parse error response:", text.substring(0, 100));
+          errorMessage = text || `Registration failed with status ${response.status}`;
         }
+        
+        throw new Error(errorMessage);
       }
 
       // Parse successful response
