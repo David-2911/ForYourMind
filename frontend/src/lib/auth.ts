@@ -44,20 +44,27 @@ class AuthService {
 
   async login(email: string, password: string, organizationCode?: string): Promise<AuthResponse> {
     try {
-      console.log(`Attempting login to ${API_BASE}/api/auth/login`);
+      // Validate API_BASE is configured
+      if (!API_BASE) {
+        throw new Error("API URL not configured. Please set VITE_API_URL environment variable.");
+      }
+
+      const url = `${API_BASE}/api/auth/login`;
+      console.log(`Attempting login to ${url}`);
       
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(url, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, organizationCode }),
       });
 
+      // Always read the response body once
+      const text = await response.text();
+      
       if (!response.ok) {
         console.error(`Login failed with status ${response.status}`);
         
-        // Read response as text first, then try to parse as JSON
-        const text = await response.text();
         try {
           const errorData = JSON.parse(text);
           throw new Error(errorData.message || "Login failed");
@@ -68,9 +75,15 @@ class AuthService {
         }
       }
 
-      const data: AuthResponse = await response.json();
-      this.setAuthData(data);
-      return data;
+      // Parse successful response
+      try {
+        const data: AuthResponse = JSON.parse(text);
+        this.setAuthData(data);
+        return data;
+      } catch (parseError) {
+        console.error("Failed to parse successful response:", text.substring(0, 100));
+        throw new Error("Login succeeded but response format is invalid");
+      }
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -108,20 +121,27 @@ class AuthService {
     role: "individual" | "manager" | "admin";
   }): Promise<AuthResponse> {
     try {
-      console.log(`Attempting registration to ${API_BASE}/api/auth/register`);
+      // Validate API_BASE is configured
+      if (!API_BASE) {
+        throw new Error("API URL not configured. Please set VITE_API_URL environment variable.");
+      }
+
+      const url = `${API_BASE}/api/auth/register`;
+      console.log(`Attempting registration to ${url}`);
       
-      const response = await fetch(`${API_BASE}/api/auth/register`, {
+      const response = await fetch(url, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       });
 
+      // Always read the response body once
+      const text = await response.text();
+      
       if (!response.ok) {
         console.error(`Registration failed with status ${response.status}`);
         
-        // Read response as text first, then try to parse as JSON
-        const text = await response.text();
         try {
           const errorData = JSON.parse(text);
           throw new Error(errorData.message || "Registration failed");
@@ -132,9 +152,15 @@ class AuthService {
         }
       }
 
-      const data: AuthResponse = await response.json();
-      this.setAuthData(data);
-      return data;
+      // Parse successful response
+      try {
+        const data: AuthResponse = JSON.parse(text);
+        this.setAuthData(data);
+        return data;
+      } catch (parseError) {
+        console.error("Failed to parse successful response:", text.substring(0, 100));
+        throw new Error("Registration succeeded but response format is invalid");
+      }
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
