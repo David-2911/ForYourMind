@@ -21,7 +21,7 @@ services:
   # BACKEND API SERVICE
   # ============================================================
   - type: web
-    name: mindfulme-backend
+    name: fym-backend
     runtime: node
     region: oregon # Options: oregon, frankfurt, singapore, ohio, virginia
     plan: free # Options: free (512MB, sleeps after inactivity), starter ($7/mo, 512MB), standard ($25/mo, 2GB)
@@ -53,7 +53,7 @@ services:
       # === DATABASE ===
       - key: DATABASE_URL
         fromDatabase:
-          name: mindfulme-postgres
+          name: fym-postgres
           property: connectionString
       
       - key: USE_SQLITE
@@ -145,7 +145,7 @@ services:
   # FRONTEND STATIC SITE
   # ============================================================
   - type: web
-    name: mindfulme-frontend
+    name: fym-frontend
     runtime: static
     region: oregon
     plan: free # Static sites are always free on Render
@@ -247,7 +247,7 @@ services:
 # DATABASE CONFIGURATION
 # ============================================================
 databases:
-  - name: mindfulme-postgres
+  - name: fym-postgres
     region: oregon # Must match backend region for best performance
     plan: free # Options: free (256MB, 90 days retention), starter ($7/mo, 1GB), standard ($20/mo, 10GB)
     databaseName: mindfulme_prod
